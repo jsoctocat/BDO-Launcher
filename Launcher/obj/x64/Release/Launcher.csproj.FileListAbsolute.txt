@@ -22,15 +22,3 @@ C:\Users\Dmoxi\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csproj.Cor
 C:\Users\Dmoxi\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csproj.CopyComplete
 C:\Users\Dmoxi\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.exe
 C:\Users\Dmoxi\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.pdb
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\bin\x64\Release\Launcher.exe
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\bin\x64\Release\Launcher.pdb
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\bin\x64\Release\Newtonsoft.Json.dll
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\bin\x64\Release\Newtonsoft.Json.xml
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csprojAssemblyReference.cache
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.MainForm.resources
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.Properties.Resources.resources
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csproj.GenerateResource.cache
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csproj.CoreCompileInputs.cache
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.csproj.CopyComplete
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.exe
-C:\Users\ixomD\Desktop\BDO_Launcher\Launcher\obj\x64\Release\Launcher.pdb

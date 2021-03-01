@@ -167,11 +167,11 @@ namespace Launcher
 
         private async Task<bool> StartGameAsync()
         {
-            string gameExecutableFilePath = Path.Combine(this.configuration.GameDirectoryPath, "bin64", "BlackDesert64.exe");
+            string gameExecutableFilePath = Path.Combine(this.configuration.GameDirectoryPath, "BlackDesertEAC.exe");
 
             if (!File.Exists(gameExecutableFilePath))
             {
-                MessageBox.Show($"Failed to find `BlackDesert64.exe`.\nUsed path: `{gameExecutableFilePath}`.\nPlease set the correct path to the game.",
+                MessageBox.Show($"Failed to find `BlackDesertEAC.exe`.\nUsed path: `{gameExecutableFilePath}`.\nPlease set the correct path to the game.",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
