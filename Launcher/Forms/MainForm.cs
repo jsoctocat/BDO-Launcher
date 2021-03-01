@@ -126,7 +126,7 @@ namespace Launcher
 
             if (String.IsNullOrEmpty(this.configuration.GameDirectoryPath))
                 messageBoxText = "The path to the game is not set.\nDo you want to set it now?";
-            else if (!Directory.Exists(this.configuration.GameDirectoryPath) || !File.Exists(Path.Combine(this.configuration.GameDirectoryPath, "Black Desert Online Launcher.exe")))
+            else if (!Directory.Exists(this.configuration.GameDirectoryPath) || !File.Exists(Path.Combine(this.configuration.GameDirectoryPath, "BlackDesertLauncher.exe")))
                 messageBoxText = "The path to the game is invalid.\nDo you want to set it now?";
             else
                 return true;
