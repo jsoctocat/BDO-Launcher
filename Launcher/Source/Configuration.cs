@@ -12,36 +12,50 @@ namespace Launcher
 
         public string Username
         {
-            get { return this.username; }
-            set { this.username = value; }
+            get { return username; }
+            set { username = value; }
         }
 
         public byte[] EncryptedPassword
         {
-            get { return this.encryptedPassword; }
-            set { this.encryptedPassword = value; }
+            get { return encryptedPassword; }
+            set { encryptedPassword = value; }
+        }
+        
+        public int RegionComboBox
+        {
+            get { return regionComboBox; }
+            set { regionComboBox = value; }
+        }
+
+        public bool OTP
+        {
+            get { return otp; }
+            set { otp = value; }
         }
 
         public bool RememberData
         {
-            get { return this.rememberData; }
-            set { this.rememberData = value; }
+            get { return rememberData; }
+            set { rememberData = value; }
         }
 
         public bool LoginAutomatically
         {
-            get { return this.loginAutomatically; }
-            set { this.loginAutomatically = value; }
+            get { return loginAutomatically; }
+            set { loginAutomatically = value; }
         }
 
         public string GameDirectoryPath
         {
-            get { return this.gameDirectoryPath; }
-            set { this.gameDirectoryPath = value; }
+            get { return gameDirectoryPath; }
+            set { gameDirectoryPath = value; }
         }
 
         private string username;
         private byte[] encryptedPassword;
+        private int regionComboBox;
+        private bool otp;
         private bool rememberData;
         private bool loginAutomatically;
         private string gameDirectoryPath;
@@ -50,6 +64,8 @@ namespace Launcher
         {
             this.username = null;
             this.encryptedPassword = null;
+            this.regionComboBox = 0;
+            this.otp = false;
             this.rememberData = false;
             this.loginAutomatically = false;
             this.gameDirectoryPath = null;
@@ -57,18 +73,18 @@ namespace Launcher
 
         public string GetPassword()
         {
-            if ((this.encryptedPassword == null) || !this.encryptedPassword.Any())
+            if (encryptedPassword == null || !encryptedPassword.Any())
                 return null;
 
-            return CryptographyManager.Decrypt(this.encryptedPassword);
+            return CryptographyManager.Decrypt(encryptedPassword);
         }
 
         public void SetPassword(string password)
         {
             if (String.IsNullOrEmpty(password))
-                this.encryptedPassword = null;
+                encryptedPassword = null;
             else
-                this.encryptedPassword = CryptographyManager.Encrypt(password);
+                encryptedPassword = CryptographyManager.Encrypt(password);
         }
 
     }
