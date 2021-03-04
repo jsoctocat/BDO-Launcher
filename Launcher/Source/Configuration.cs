@@ -12,79 +12,87 @@ namespace Launcher
 
         public string Username
         {
-            get { return username; }
-            set { username = value; }
+            get { return _username; }
+            set { _username = value; }
         }
 
         public byte[] EncryptedPassword
         {
-            get { return encryptedPassword; }
-            set { encryptedPassword = value; }
+            get { return _encryptedPassword; }
+            set { _encryptedPassword = value; }
         }
         
         public int RegionComboBox
         {
-            get { return regionComboBox; }
-            set { regionComboBox = value; }
+            get { return _regionComboBox; }
+            set { _regionComboBox = value; }
         }
 
         public bool OTP
         {
-            get { return otp; }
-            set { otp = value; }
+            get { return _otp; }
+            set { _otp = value; }
+        }
+
+        public bool GameMode
+        {
+            get { return _gamemode; }
+            set { _gamemode = value; }
         }
 
         public bool RememberData
         {
-            get { return rememberData; }
-            set { rememberData = value; }
+            get { return _rememberData; }
+            set { _rememberData = value; }
         }
 
         public bool LoginAutomatically
         {
-            get { return loginAutomatically; }
-            set { loginAutomatically = value; }
+            get { return _loginAutomatically; }
+            set { _loginAutomatically = value; }
         }
 
         public string GameDirectoryPath
         {
-            get { return gameDirectoryPath; }
-            set { gameDirectoryPath = value; }
+            get { return _gameDirectoryPath; }
+            set { _gameDirectoryPath = value; }
         }
 
-        private string username;
-        private byte[] encryptedPassword;
-        private int regionComboBox;
-        private bool otp;
-        private bool rememberData;
-        private bool loginAutomatically;
-        private string gameDirectoryPath;
+        private string _username;
+        private byte[] _encryptedPassword;
+        private int _regionComboBox;
+        private bool _otp;
+        private bool _gamemode;
+        private bool _rememberData;
+        private bool _loginAutomatically;
+        private string _gameDirectoryPath;
 
         public Configuration()
         {
-            this.username = null;
-            this.encryptedPassword = null;
-            this.regionComboBox = 0;
-            this.otp = false;
-            this.rememberData = false;
-            this.loginAutomatically = false;
-            this.gameDirectoryPath = null;
+            _username = null;
+            _encryptedPassword = null;
+            _regionComboBox = 0;
+            _otp = false;
+            _gamemode = false;
+            _rememberData = false;
+            _loginAutomatically = false;
+            _gameDirectoryPath = null;
         }
 
         public string GetPassword()
         {
-            if (encryptedPassword == null || !encryptedPassword.Any())
+            if (_encryptedPassword == null || !_encryptedPassword.Any())
                 return null;
 
-            return CryptographyManager.Decrypt(encryptedPassword);
+            return CryptographyManager.Decrypt(_encryptedPassword);
         }
 
         public void SetPassword(string password)
         {
             if (String.IsNullOrEmpty(password))
-                encryptedPassword = null;
+                _encryptedPassword = null;
             else
-                encryptedPassword = CryptographyManager.Encrypt(password);
+                _encryptedPassword = CryptographyManager.Encrypt(password);
         }
 
     }

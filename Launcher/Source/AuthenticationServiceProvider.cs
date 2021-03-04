@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Windows.Forms;
 
 namespace Launcher
 {
@@ -182,7 +182,22 @@ namespace Launcher
                 var message = new HttpRequestMessage(HttpMethod.Post, _authenticationEndPoint);
                 message.Headers.Add("User-Agent", "BLACKDESERT");
                 message.Headers.Add("Cookie", authenticationToken);
-                message.Content = new StringContent("serverKey=" + region, Encoding.UTF8, "application/x-www-form-urlencoded");
+                
+                // supports registered PC feature, fully implemented but disabled for now, uncomment the code to use
+                // var mac = 
+                // (
+                //     from nic in NetworkInterface.GetAllNetworkInterfaces()
+                //     where nic.OperationalStatus == OperationalStatus.Up
+                //     select nic.GetPhysicalAddress().ToString()
+                // ).FirstOrDefault();
+                //
+                // if (string.IsNullOrEmpty(mac))
+                //     throw new ArgumentNullException(nameof(mac));
+                //
+                // var macAddr = string.Join ("-", Enumerable.Range(0, 6)
+                //     .Select(i => mac.Substring(i * 2, 2)));
+    
+                message.Content = new StringContent($"macAddr={null}&serverKey={region}", Encoding.UTF8, "application/x-www-form-urlencoded");
                 
                 using (var result = await client.SendAsync(message))
                 {

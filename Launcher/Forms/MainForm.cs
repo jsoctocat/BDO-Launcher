@@ -115,6 +115,7 @@ namespace Launcher
 
             RegionComboBox.SelectedIndex = configuration.RegionComboBox;
             OTPCheckBox.Checked = configuration.OTP;
+            GameModeCheckBox.Checked = configuration.GameMode;
             RememberDataCheckBox.Checked = configuration.RememberData;
             LoginAutomaticallyCheckBox.Checked = configuration.LoginAutomatically;
 
@@ -143,6 +144,13 @@ namespace Launcher
         private void OTPCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             configuration.OTP = OTPCheckBox.Checked;
+
+            ConfigurationManager.Save(configuration);
+        }
+
+        private void GameModeCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            configuration.GameMode = GameModeCheckBox.Checked;
 
             ConfigurationManager.Save(configuration);
         }
@@ -281,6 +289,9 @@ namespace Launcher
                     PasswordTextBox.Text, 
                     RegionComboBox.SelectedItem.ToString(), 
                     otp);
+
+                if (!GameModeCheckBox.Checked)
+                    playToken += " -eac_launcher_settings Settings64.json";
 
                 if (playToken == null)
                 {
