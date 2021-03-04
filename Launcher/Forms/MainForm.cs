@@ -1,125 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Remoting.Messaging;
 
 namespace Launcher
 {
     public partial class MainForm : Form
     {
-        private Configuration configuration;
-
+        private Configuration _configuration;
+        private Otp _otp;
+        
         public MainForm()
         {
             InitializeComponent();
-        }
-        
-        private void OTPAsync()
-        {
-            var size = new Size(200, 55);
-            var otpInputBox = new Form
-            {
-                StartPosition = FormStartPosition.CenterScreen,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MaximizeBox = false,
-                ClientSize = size,
-                Text = "OTP"
-            };
-
-            var otpTextBox = new TextBox
-            {
-                Size = new Size(size.Width - 20, 25),
-                Location = new Point(10, 5)
-            };
-            
-            otpInputBox.Controls.Add(otpTextBox);
-            
-            var loginButton = new Button
-            {
-                Size = new Size(size.Width - 20, 25),
-                Text = "&Login",
-                Location = new Point(10, 25)
-            };
-            otpInputBox.Controls.Add(loginButton);
-            
-            async void OkButton_Click(object sender, EventArgs e)
-            {
-                if (string.IsNullOrEmpty(otpTextBox.Text))
-                {
-                    MessageBox.Show("Please enter valid OTP.",
-                        "Error",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
-                
-                if (await StartGameAsync(int.Parse(otpTextBox.Text)))
-                {
-                    otpInputBox.Close();
-                    Close();
-                }
-                else
-                    StartGameButton.Enabled = true;
-            }
-            loginButton.Click += OkButton_Click;
-
-            void Exit(object sender, FormClosingEventArgs e)
-            {
-                StartGameButton.Enabled = true;
-            }
-            otpInputBox.FormClosing += Exit;
-
-            void TextBox_KeyPress(object sender, KeyPressEventArgs e)
-            {
-                if (e.KeyChar == Convert.ToChar(Keys.Return))
-                {
-                    loginButton.PerformClick();
-                }
-            }
-            otpTextBox.KeyPress += TextBox_KeyPress;
-            
-            otpInputBox.Show(this);
+            _otp = new Otp();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            configuration = ConfigurationManager.Load();
+            _configuration = ConfigurationManager.Load();
 
-            if (configuration == null)
+            if (_configuration == null)
             {
-                configuration = new Configuration();
+                _configuration = new Configuration();
 
-                ConfigurationManager.Save(configuration);
+                ConfigurationManager.Save(_configuration);
             }
 
-            if (configuration.LoginAutomatically && (Environment.GetCommandLineArgs().Length >= 2) && (Environment.GetCommandLineArgs()[1].ToLower() == "--disable-automatic-login"))
-                configuration.LoginAutomatically = false;
+            if (_configuration.LoginAutomatically && (Environment.GetCommandLineArgs().Length >= 2) && (Environment.GetCommandLineArgs()[1].ToLower() == "--disable-automatic-login"))
+                _configuration.LoginAutomatically = false;
 
             if (CheckGameDirectoryPathAndPrompt())
-                Text = $"Launcher | {configuration.GameDirectoryPath}";
+                Text = $"Launcher | {_configuration.GameDirectoryPath}";
 
-            if (configuration.RememberData)
+            if (_configuration.RememberData)
             {
-                UsernameTextBox.Text = configuration.Username;
-                PasswordTextBox.Text = configuration.GetPassword();
+                UsernameTextBox.Text = _configuration.Username;
+                PasswordTextBox.Text = _configuration.GetPassword();
             }
 
-            RegionComboBox.SelectedIndex = configuration.RegionComboBox;
-            OTPCheckBox.Checked = configuration.OTP;
-            GameModeCheckBox.Checked = configuration.GameMode;
-            RememberDataCheckBox.Checked = configuration.RememberData;
-            LoginAutomaticallyCheckBox.Checked = configuration.LoginAutomatically;
+            OtpCheckBox.Checked = _configuration.Otp;
+            OtpTextBox.Text = _configuration.GetOtp();
+            RegionComboBox.SelectedIndex = _configuration.RegionComboBox;
+            GameModeCheckBox.Checked = _configuration.GameMode;
+            RememberDataCheckBox.Checked = _configuration.RememberData;
+            LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
 
-            if (configuration.LoginAutomatically)
+            if (_configuration.LoginAutomatically)
             {
                 GameStart();
             }
@@ -127,39 +56,46 @@ namespace Launcher
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            configuration.Username = UsernameTextBox.Text;
+            if (RememberDataCheckBox.Checked)
+            {
+                _configuration.Username = UsernameTextBox.Text;
+                _configuration.SetPassword(PasswordTextBox.Text);
+            }
+            //Always save OTP
+            _configuration.SetOtp(OtpTextBox.Text);
 
-            configuration.SetPassword(PasswordTextBox.Text);
+            ConfigurationManager.Save(_configuration);
+        }
 
-            ConfigurationManager.Save(configuration);
+        private void OtpCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            //Do not allow edit OTP if Otp is enabled
+            OtpTextBox.Enabled = !OtpCheckBox.Checked;
+            
+            _configuration.Otp = OtpCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
         }
 
         private void RegionComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            configuration.RegionComboBox = RegionComboBox.SelectedIndex;
+            _configuration.RegionComboBox = RegionComboBox.SelectedIndex;
             
-            ConfigurationManager.Save(configuration);
-        }
-
-        private void OTPCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            configuration.OTP = OTPCheckBox.Checked;
-
-            ConfigurationManager.Save(configuration);
+            ConfigurationManager.Save(_configuration);
         }
 
         private void GameModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            configuration.GameMode = GameModeCheckBox.Checked;
+            _configuration.GameMode = GameModeCheckBox.Checked;
 
-            ConfigurationManager.Save(configuration);
+            ConfigurationManager.Save(_configuration);
         }
         
         private void RememberDataCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            configuration.RememberData = RememberDataCheckBox.Checked;
+            _configuration.RememberData = RememberDataCheckBox.Checked;
 
-            ConfigurationManager.Save(configuration);
+            ConfigurationManager.Save(_configuration);
         }
 
         private void LoginAutomaticallyCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -172,18 +108,16 @@ namespace Launcher
             else
                 RememberDataCheckBox.Enabled = true;
 
-            configuration.LoginAutomatically = LoginAutomaticallyCheckBox.Checked;
+            _configuration.LoginAutomatically = LoginAutomaticallyCheckBox.Checked;
 
-            ConfigurationManager.Save(configuration);
+            ConfigurationManager.Save(_configuration);
         }
         
         private async void GameStart()
         {
             StartGameButton.Enabled = false;
-
-            if (OTPCheckBox.Checked)
-                OTPAsync();
-            else if (await StartGameAsync(0))
+            
+            if (await StartGameAsync())
                 Close();
             else
                 StartGameButton.Enabled = true;
@@ -200,11 +134,11 @@ namespace Launcher
 
             if (newGameDirectoryPath != null)
             {
-                configuration.GameDirectoryPath = newGameDirectoryPath;
+                _configuration.GameDirectoryPath = newGameDirectoryPath;
 
-                ConfigurationManager.Save(configuration);
+                ConfigurationManager.Save(_configuration);
 
-                Text = $"Launcher | {configuration.GameDirectoryPath}";
+                Text = $"Launcher | {_configuration.GameDirectoryPath}";
             }
         }
 
@@ -217,9 +151,9 @@ namespace Launcher
         {
             string messageBoxText = null;
 
-            if (String.IsNullOrEmpty(configuration.GameDirectoryPath))
+            if (String.IsNullOrEmpty(_configuration.GameDirectoryPath))
                 messageBoxText = "The path to the game is not set.\nDo you want to set it now?";
-            else if (!Directory.Exists(configuration.GameDirectoryPath) || !File.Exists(Path.Combine(configuration.GameDirectoryPath, "BlackDesertLauncher.exe")))
+            else if (!Directory.Exists(_configuration.GameDirectoryPath) || !File.Exists(Path.Combine(_configuration.GameDirectoryPath, "BlackDesertLauncher.exe")))
                 messageBoxText = "The path to the game is invalid.\nDo you want to set it now?";
             else
                 return true;
@@ -232,11 +166,11 @@ namespace Launcher
 
                 if (newGameDirectoryPath != null)
                 {
-                    configuration.GameDirectoryPath = newGameDirectoryPath;
+                    _configuration.GameDirectoryPath = newGameDirectoryPath;
 
-                    ConfigurationManager.Save(configuration);
+                    ConfigurationManager.Save(_configuration);
 
-                    Text = $"Launcher | {configuration.GameDirectoryPath}";
+                    Text = $"Launcher | {_configuration.GameDirectoryPath}";
                 }
             }
 
@@ -258,9 +192,9 @@ namespace Launcher
             return null;
         }
 
-        private async Task<bool> StartGameAsync(int otp)
+        private async Task<bool> StartGameAsync()
         {
-            var gameExecutableFilePath = Path.Combine(configuration.GameDirectoryPath, "BlackDesertEAC.exe");
+            var gameExecutableFilePath = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertEAC.exe");
 
             if (!File.Exists(gameExecutableFilePath))
             {
@@ -274,7 +208,17 @@ namespace Launcher
 
             if (string.IsNullOrEmpty(UsernameTextBox.Text) || string.IsNullOrEmpty(PasswordTextBox.Text))
             {
-                MessageBox.Show("Please enter valid credentials.",
+                MessageBox.Show("Please enter valid credential(s).",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return false;
+            }
+
+            if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
+            {
+                MessageBox.Show("Please enter valid OTP.",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -284,6 +228,13 @@ namespace Launcher
 
             using (AuthenticationServiceProvider authenticationServiceProvider = new AuthenticationServiceProvider())
             {
+                var otp = 0;
+                if (OtpCheckBox.Checked)
+                {
+                    _otp.Password = Base32.ToBytes(OtpTextBox.Text);
+                    otp = _otp.OneTimePassword;
+                }
+
                 var playToken = await authenticationServiceProvider.AuthenticateAsync(
                     UsernameTextBox.Text, 
                     PasswordTextBox.Text, 

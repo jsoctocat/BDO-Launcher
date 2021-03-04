@@ -59,9 +59,11 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Source\AuthenticationServiceProvider.cs" />
+    <Compile Include="Source\Base32.cs" />
     <Compile Include="Source\Configuration.cs" />
     <Compile Include="Source\ConfigurationManager.cs" />
     <Compile Include="Source\CryptographyManager.cs" />
+    <Compile Include="Source\OTP.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\MainForm.resx">
