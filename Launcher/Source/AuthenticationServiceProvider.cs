@@ -59,7 +59,7 @@ namespace Launcher
                 var responseUri = response.ResponseUri.ToString();
 
                 //construct the returnUrl from response url
-                var startPos = responseUri.LastIndexOf("=https", StringComparison.Ordinal) + 1;
+                var startPos = responseUri.LastIndexOf("returnUrl=", StringComparison.Ordinal) + "returnUrl=".Length;
                 var length = responseUri.Length - startPos;
                 var returnUrl = responseUri.Substring(startPos, length);
 
@@ -80,8 +80,8 @@ namespace Launcher
                 //required parameter(s): _returnUrl, joinType, username, password
                 var data = $"_returnUrl={returnUrl}" +
                            "&_joinType=1" +
-                           "&_email=" + username +
-                           "&_password=" + password;
+                           $"&_email={username}" +
+                           $"&_password={password}";
                 
                 var message = new HttpRequestMessage(HttpMethod.Post, _authenticationToken);
                 message.Headers.Add("User-Agent", "BLACKDESERT");
@@ -93,14 +93,15 @@ namespace Launcher
                         return null;
 
                     var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
+                    var returnUrlJson = resultJson["returnUrl"].ToString();
 
-                    if (resultJson["returnUrl"] == null)
-                        return null;
+                    if (string.IsNullOrEmpty(returnUrlJson))
+                        throw new ArgumentNullException(nameof(returnUrlJson));
 
                     var request = (HttpWebRequest) WebRequest.Create(resultJson["returnUrl"].Value<string>());
                     
                     if(otp != 0)
-                        request = await VerifyOTPAsync(otp, returnUrl, request);
+                        request = await VerifyOtpAsync(otp.ToString("D6"), returnUrl, request);
 
                     request.CookieContainer = _cookieContainer;
                     request.Method = "GET";
@@ -123,7 +124,7 @@ namespace Launcher
             }
         }
 
-        private async Task<HttpWebRequest> VerifyOTPAsync(int otp, string returnUrl, HttpWebRequest request)
+        private async Task<HttpWebRequest> VerifyOtpAsync(string otp, string returnUrl, HttpWebRequest request)
         {
             if (string.IsNullOrEmpty(returnUrl))
                 throw new ArgumentNullException(nameof(returnUrl));
@@ -139,15 +140,19 @@ namespace Launcher
                 var responseUri = response.ResponseUri.ToString();
 
                 //construct the loginEncrypt from response url
-                var startPos = responseUri.LastIndexOf("_loginEncrypt=", StringComparison.Ordinal) +
-                               "_loginEncrypt=".Length;
+                var startPos = responseUri.LastIndexOf("loginEncrypt=", StringComparison.Ordinal) +
+                               "loginEncrypt=".Length;
                 var length = responseUri.Length - startPos;
                 var loginEncrypt = responseUri.Substring(startPos, length);
+                
                 
                 using (var handler = new HttpClientHandler { CookieContainer = _cookieContainer })
                 using (var client = new HttpClient(handler) { BaseAddress = _authenticationEndPointOTP })
                 {
-                    var data = $"_code={otp}&_returnUrl={returnUrl}&_isBackUpCodeAuth=false&_loginEncrypt={loginEncrypt}";
+                    var data = $"_code={otp}&" +
+                               $"_returnUrl={returnUrl}&" +
+                               $"_isBackUpCodeAuth=false&" +
+                               $"_loginEncrypt={loginEncrypt}";
                 
                     var message = new HttpRequestMessage(HttpMethod.Post, _authenticationEndPointOTP);
                     message.Headers.Add("User-Agent", "BLACKDESERT");
@@ -160,9 +165,11 @@ namespace Launcher
                             return null;
 
                         var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-                        
-                        if (resultJson["okUrl"] == null)
-                            return null;
+                        var okUrlJson = resultJson["okUrl"].ToString();
+
+                        //a message will return if encounters an OTP authentication error
+                        if (okUrlJson == "/")
+                            throw new ArgumentNullException( $"OTP Authentication error, message={ resultJson["message"] }");
 
                         return (HttpWebRequest) WebRequest.Create(resultJson["okUrl"].Value<string>());
                     }
@@ -204,12 +211,13 @@ namespace Launcher
                     if (!result.IsSuccessStatusCode)
                         return null;
             
-                    var responseJObject = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-            
-                    if (responseJObject["_result"]["resultMsg"] == null)
-                        return null;
+                    var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
+                    var resultMsgJson = resultJson["_result"]["resultMsg"].ToString();
 
-                    return responseJObject["_result"]["resultMsg"].Value<string>();
+                    if (string.IsNullOrEmpty(resultMsgJson))
+                        throw new ArgumentNullException(nameof(resultMsgJson));
+
+                    return resultJson["_result"]["resultMsg"].Value<string>();
                 }
             }
         }

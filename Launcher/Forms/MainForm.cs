@@ -44,7 +44,7 @@ namespace Launcher
             OtpCheckBox.Checked = _configuration.Otp;
             OtpTextBox.Text = _configuration.GetOtp();
             RegionComboBox.SelectedIndex = _configuration.RegionComboBox;
-            GameModeCheckBox.Checked = _configuration.GameMode;
+            GameMode32BitCheckBox.Checked = _configuration.GameMode32Bit;
             RememberDataCheckBox.Checked = _configuration.RememberData;
             LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
 
@@ -86,7 +86,7 @@ namespace Launcher
 
         private void GameModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            _configuration.GameMode = GameModeCheckBox.Checked;
+            _configuration.GameMode32Bit = GameMode32BitCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
@@ -241,9 +241,6 @@ namespace Launcher
                     RegionComboBox.SelectedItem.ToString(), 
                     otp);
 
-                if (!GameModeCheckBox.Checked)
-                    playToken += " -eac_launcher_settings Settings64.json";
-
                 if (playToken == null)
                 {
                     MessageBox.Show("Username, Password, or OTP is not correct.\n(Or there might be an authentication problem.)",
@@ -253,6 +250,9 @@ namespace Launcher
 
                     return false;
                 }
+
+                if (!GameMode32BitCheckBox.Checked)
+                    playToken += " -eac_launcher_settings Settings64.json";
 
                 using (Process process = new Process())
                 {

@@ -30,15 +30,15 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.LoginGroupBox = new System.Windows.Forms.GroupBox();
-            this.OtpCheckBox = new System.Windows.Forms.CheckBox();
-            this.OtpTextBox = new System.Windows.Forms.TextBox();
-            this.GameModeCheckBox = new System.Windows.Forms.CheckBox();
             this.UsernameTextBox = new System.Windows.Forms.TextBox();
             this.UsernameLabel = new System.Windows.Forms.Label();
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.PasswordTextBox = new System.Windows.Forms.TextBox();
+            this.OtpCheckBox = new System.Windows.Forms.CheckBox();
+            this.OtpTextBox = new System.Windows.Forms.TextBox();
             this.RegionLabel = new System.Windows.Forms.Label();
             this.RegionComboBox = new System.Windows.Forms.ComboBox();
+            this.GameMode32BitCheckBox = new System.Windows.Forms.CheckBox();
             this.RememberDataCheckBox = new System.Windows.Forms.CheckBox();
             this.LoginAutomaticallyCheckBox = new System.Windows.Forms.CheckBox();
             this.StartGameButton = new System.Windows.Forms.Button();
@@ -49,15 +49,15 @@
             // 
             // LoginGroupBox
             // 
-            this.LoginGroupBox.Controls.Add(this.OtpCheckBox);
-            this.LoginGroupBox.Controls.Add(this.OtpTextBox);
-            this.LoginGroupBox.Controls.Add(this.GameModeCheckBox);
             this.LoginGroupBox.Controls.Add(this.UsernameTextBox);
             this.LoginGroupBox.Controls.Add(this.UsernameLabel);
             this.LoginGroupBox.Controls.Add(this.PasswordLabel);
             this.LoginGroupBox.Controls.Add(this.PasswordTextBox);
+            this.LoginGroupBox.Controls.Add(this.OtpCheckBox);
+            this.LoginGroupBox.Controls.Add(this.OtpTextBox);
             this.LoginGroupBox.Controls.Add(this.RegionLabel);
             this.LoginGroupBox.Controls.Add(this.RegionComboBox);
+            this.LoginGroupBox.Controls.Add(this.GameMode32BitCheckBox);
             this.LoginGroupBox.Controls.Add(this.RememberDataCheckBox);
             this.LoginGroupBox.Controls.Add(this.LoginAutomaticallyCheckBox);
             this.LoginGroupBox.Controls.Add(this.StartGameButton);
@@ -89,13 +89,13 @@
             // 
             // GameModeCheckBox
             // 
-            this.GameModeCheckBox.Location = new System.Drawing.Point(16, 103);
-            this.GameModeCheckBox.Name = "GameModeCheckBox";
-            this.GameModeCheckBox.Size = new System.Drawing.Size(56, 24);
-            this.GameModeCheckBox.TabIndex = 8;
-            this.GameModeCheckBox.Text = "32 BIT";
-            this.GameModeCheckBox.UseVisualStyleBackColor = true;
-            this.GameModeCheckBox.CheckedChanged += new System.EventHandler(this.GameModeCheckBox_CheckedChanged);
+            this.GameMode32BitCheckBox.Location = new System.Drawing.Point(16, 103);
+            this.GameMode32BitCheckBox.Name = "GameMode32BitCheckBox";
+            this.GameMode32BitCheckBox.Size = new System.Drawing.Size(56, 24);
+            this.GameMode32BitCheckBox.TabIndex = 8;
+            this.GameMode32BitCheckBox.Text = "32 BIT";
+            this.GameMode32BitCheckBox.UseVisualStyleBackColor = true;
+            this.GameMode32BitCheckBox.CheckedChanged += new System.EventHandler(this.GameModeCheckBox_CheckedChanged);
             // 
             // UsernameTextBox
             // 
@@ -243,7 +243,7 @@
         private System.Windows.Forms.TextBox PasswordTextBox;
         private System.Windows.Forms.Label RegionLabel;
         private System.Windows.Forms.ComboBox RegionComboBox;
-        private System.Windows.Forms.CheckBox GameModeCheckBox;
+        private System.Windows.Forms.CheckBox GameMode32BitCheckBox;
         private System.Windows.Forms.CheckBox RememberDataCheckBox;
         private System.Windows.Forms.CheckBox LoginAutomaticallyCheckBox;
         private System.Windows.Forms.Button StartGameButton;

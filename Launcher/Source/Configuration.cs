@@ -14,7 +14,7 @@ namespace Launcher
         private bool _otp;
         private byte[] _encryptedOtp;
         private int _regionComboBox;
-        private bool _gamemode;
+        private bool _gamemode32bit;
         private bool _rememberData;
         private bool _loginAutomatically;
         private string _gameDirectoryPath;
@@ -44,10 +44,10 @@ namespace Launcher
             get => _regionComboBox;
             set => _regionComboBox = value;
         }
-        public bool GameMode
+        public bool GameMode32Bit
         {
-            get => _gamemode;
-            set => _gamemode = value;
+            get => _gamemode32bit;
+            set => _gamemode32bit = value;
         }
         public bool RememberData
         {
@@ -72,7 +72,7 @@ namespace Launcher
             _otp = false;
             _encryptedOtp = null;
             _regionComboBox = 0;
-            _gamemode = false;
+            _gamemode32bit = false;
             _rememberData = false;
             _loginAutomatically = false;
             _gameDirectoryPath = null;
