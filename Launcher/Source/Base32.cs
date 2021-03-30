@@ -4,7 +4,7 @@ namespace Launcher
 {
     //https://stackoverflow.com/questions/641361/base32-decoding
     //by Shane
-    public static class Base32
+    public static class Base32Converter
     {
         public static byte[] ToBytes(string input)
         {

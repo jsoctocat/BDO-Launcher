@@ -113,19 +113,21 @@ namespace Launcher
             ConfigurationManager.Save(_configuration);
         }
         
-        private async void GameStart()
-        {
-            StartGameButton.Enabled = false;
-            
-            if (await StartGameAsync())
-                Close();
-            else
-                StartGameButton.Enabled = true;
-        }
-        
         private void StartGameButton_Click(object sender, EventArgs e)
         {
             GameStart();
+        }
+        
+        private async void GameStart()
+        {
+            StartGameButton.Enabled = false;
+
+            if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
+                OneTimePasswordAsync();
+            else if (await StartGameAsync())
+                Close();
+            else
+                StartGameButton.Enabled = true;
         }
 
         private void GameDirectoryPathLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -192,6 +194,75 @@ namespace Launcher
             return null;
         }
 
+        private void OneTimePasswordAsync()
+        {
+            var size = new Size(200, 55);
+            var otpInputBox = new Form
+            {
+                StartPosition = FormStartPosition.CenterScreen,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                ClientSize = size,
+                Text = "OTP"
+            };
+        
+            var otpTextBox = new TextBox
+            {
+                Size = new Size(size.Width - 20, 25),
+                Location = new Point(10, 5)
+            };
+        
+            otpInputBox.Controls.Add(otpTextBox);
+        
+            var loginButton = new Button
+            {
+                Size = new Size(size.Width - 20, 25),
+                Text = "&Login",
+                Location = new Point(10, 25)
+            };
+            otpInputBox.Controls.Add(loginButton);
+        
+            async void OkButton_Click(object sender, EventArgs e)
+            {
+                if (string.IsNullOrEmpty(otpTextBox.Text))
+                {
+                    MessageBox.Show("Please enter a valid OTP.",
+                        "Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+                
+                _otp.OneTimePassword = int.Parse(otpTextBox.Text);
+                
+                if (await StartGameAsync())
+                {
+                    otpInputBox.Close();
+                    Close();
+                }
+                else
+                    StartGameButton.Enabled = true;
+            }
+            loginButton.Click += OkButton_Click;
+        
+            void Exit(object sender, FormClosingEventArgs e)
+            {
+                StartGameButton.Enabled = true;
+            }
+            otpInputBox.FormClosing += Exit;
+        
+            void TextBox_KeyPress(object sender, KeyPressEventArgs e)
+            {
+                if (e.KeyChar == Convert.ToChar(Keys.Return))
+                {
+                    loginButton.PerformClick();
+                }
+            }
+            otpTextBox.KeyPress += TextBox_KeyPress;
+        
+            otpInputBox.Show(this);
+        }
+        
         private async Task<bool> StartGameAsync()
         {
             var gameExecutableFilePath = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertEAC.exe");
@@ -208,17 +279,7 @@ namespace Launcher
 
             if (string.IsNullOrEmpty(UsernameTextBox.Text) || string.IsNullOrEmpty(PasswordTextBox.Text))
             {
-                MessageBox.Show("Please enter valid credential(s).",
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                return false;
-            }
-
-            if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
-            {
-                MessageBox.Show("Please enter valid OTP.",
+                MessageBox.Show("Please enter the valid credential(s).",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -231,7 +292,10 @@ namespace Launcher
                 var otp = 0;
                 if (OtpCheckBox.Checked)
                 {
-                    _otp.Password = Base32.ToBytes(OtpTextBox.Text);
+                    // Skip if not using master OTP
+                    if(!string.IsNullOrEmpty(OtpTextBox.Text))
+                        _otp.Password = Base32Converter.ToBytes(OtpTextBox.Text);
+                    
                     otp = _otp.OneTimePassword;
                 }
 
@@ -243,7 +307,7 @@ namespace Launcher
 
                 if (playToken == null)
                 {
-                    MessageBox.Show("Username, Password, or OTP is not correct.\n(Or there might be an authentication problem.)",
+                    MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update)",
                         "Authentication Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -254,7 +318,7 @@ namespace Launcher
                 if (!GameMode32BitCheckBox.Checked)
                     playToken += " -eac_launcher_settings Settings64.json";
 
-                using (Process process = new Process())
+                using (var process = new Process())
                 {
                     process.StartInfo.FileName = "CMD";
                     process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
@@ -264,10 +328,10 @@ namespace Launcher
                     process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
                     process.Start();
 
+                    // The following will start the game normally
                     //process.StartInfo.FileName = gameExecutableFilePath;
                     //process.StartInfo.Arguments = playToken;
                     //process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
-
                     //process.Start();
                 }
             }

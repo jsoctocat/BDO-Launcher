@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Security;
+using System.Security.Authentication;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -169,8 +171,8 @@ namespace Launcher
 
                         //a message will return if encounters an OTP authentication error
                         if (okUrlJson == "/")
-                            throw new ArgumentNullException( $"OTP Authentication error, message={ resultJson["message"] }");
-
+                            throw new AuthenticationException( $"OTP Authentication error, message={ resultJson["message"] }");
+                        
                         return (HttpWebRequest) WebRequest.Create(resultJson["okUrl"].Value<string>());
                     }
                 }
@@ -180,7 +182,7 @@ namespace Launcher
         private async Task<string> RequestPlayTokenAsync(string authenticationToken, string region)
         {
             if (string.IsNullOrEmpty(authenticationToken))
-                throw new ArgumentNullException(nameof(authenticationToken));
+                throw new AuthenticationException("Failed to retrieve authentication token, please check your username and password. (Could also be an issue of an invalid OTP)");
 
             //Disable UseCookies, only authentication token is required to start the game from here
             using (var handler = new HttpClientHandler { UseCookies = false })
@@ -191,6 +193,7 @@ namespace Launcher
                 message.Headers.Add("Cookie", authenticationToken);
                 
                 // supports registered PC feature, fully implemented but disabled for now, uncomment the code to use
+                // will grab the current PC's mac address
                 // var mac = 
                 // (
                 //     from nic in NetworkInterface.GetAllNetworkInterfaces()
@@ -199,7 +202,7 @@ namespace Launcher
                 // ).FirstOrDefault();
                 //
                 // if (string.IsNullOrEmpty(mac))
-                //     throw new ArgumentNullException(nameof(mac));
+                //     throw new SecurityException(nameof(mac));
                 //
                 // var macAddr = string.Join ("-", Enumerable.Range(0, 6)
                 //     .Select(i => mac.Substring(i * 2, 2)));

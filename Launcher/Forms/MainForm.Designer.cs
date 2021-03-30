@@ -69,34 +69,6 @@
             this.LoginGroupBox.TabStop = false;
             this.LoginGroupBox.Text = "Login";
             // 
-            // OtpCheckBox
-            // 
-            this.OtpCheckBox.Location = new System.Drawing.Point(16, 79);
-            this.OtpCheckBox.Name = "OtpCheckBox";
-            this.OtpCheckBox.Size = new System.Drawing.Size(56, 17);
-            this.OtpCheckBox.TabIndex = 4;
-            this.OtpCheckBox.Text = "OTP";
-            this.OtpCheckBox.UseVisualStyleBackColor = true;
-            this.OtpCheckBox.CheckedChanged += new System.EventHandler(this.OtpCheckBox_CheckedChanged);
-            // 
-            // OtpTextBox
-            // 
-            this.OtpTextBox.Location = new System.Drawing.Point(83, 77);
-            this.OtpTextBox.Name = "OtpTextBox";
-            this.OtpTextBox.PasswordChar = '*';
-            this.OtpTextBox.Size = new System.Drawing.Size(107, 22);
-            this.OtpTextBox.TabIndex = 5;
-            // 
-            // GameModeCheckBox
-            // 
-            this.GameMode32BitCheckBox.Location = new System.Drawing.Point(16, 103);
-            this.GameMode32BitCheckBox.Name = "GameMode32BitCheckBox";
-            this.GameMode32BitCheckBox.Size = new System.Drawing.Size(56, 24);
-            this.GameMode32BitCheckBox.TabIndex = 8;
-            this.GameMode32BitCheckBox.Text = "32 BIT";
-            this.GameMode32BitCheckBox.UseVisualStyleBackColor = true;
-            this.GameMode32BitCheckBox.CheckedChanged += new System.EventHandler(this.GameModeCheckBox_CheckedChanged);
-            // 
             // UsernameTextBox
             // 
             this.UsernameTextBox.Location = new System.Drawing.Point(83, 21);
@@ -132,6 +104,24 @@
             this.PasswordTextBox.Size = new System.Drawing.Size(236, 22);
             this.PasswordTextBox.TabIndex = 3;
             // 
+            // OtpCheckBox
+            // 
+            this.OtpCheckBox.Location = new System.Drawing.Point(16, 79);
+            this.OtpCheckBox.Name = "OtpCheckBox";
+            this.OtpCheckBox.Size = new System.Drawing.Size(56, 17);
+            this.OtpCheckBox.TabIndex = 4;
+            this.OtpCheckBox.Text = "OTP";
+            this.OtpCheckBox.UseVisualStyleBackColor = true;
+            this.OtpCheckBox.CheckedChanged += new System.EventHandler(this.OtpCheckBox_CheckedChanged);
+            // 
+            // OtpTextBox
+            // 
+            this.OtpTextBox.Location = new System.Drawing.Point(83, 77);
+            this.OtpTextBox.Name = "OtpTextBox";
+            this.OtpTextBox.PasswordChar = '*';
+            this.OtpTextBox.Size = new System.Drawing.Size(107, 22);
+            this.OtpTextBox.TabIndex = 5;
+            // 
             // RegionLabel
             // 
             this.RegionLabel.Location = new System.Drawing.Point(193, 80);
@@ -151,6 +141,16 @@
             this.RegionComboBox.Size = new System.Drawing.Size(71, 21);
             this.RegionComboBox.TabIndex = 7;
             this.RegionComboBox.SelectedIndexChanged += new System.EventHandler(this.RegionComboBox_SelectedIndexChanged);
+            // 
+            // GameMode32BitCheckBox
+            // 
+            this.GameMode32BitCheckBox.Location = new System.Drawing.Point(16, 103);
+            this.GameMode32BitCheckBox.Name = "GameMode32BitCheckBox";
+            this.GameMode32BitCheckBox.Size = new System.Drawing.Size(56, 24);
+            this.GameMode32BitCheckBox.TabIndex = 8;
+            this.GameMode32BitCheckBox.Text = "32 BIT";
+            this.GameMode32BitCheckBox.UseVisualStyleBackColor = true;
+            this.GameMode32BitCheckBox.CheckedChanged += new System.EventHandler(this.GameModeCheckBox_CheckedChanged);
             // 
             // RememberDataCheckBox
             // 
@@ -221,7 +221,7 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Launcher";
+            this.Text = "Black Desert Launcher";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.LoginGroupBox.ResumeLayout(false);
