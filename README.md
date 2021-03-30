@@ -1,14 +1,14 @@
 # Custom Online Game Launcher
-The generate of One-Time Password (OTP) implementation is based on https://github.com/LTruijens/google-auth-csharp
-This Launcher is Based on/Forked https://github.com/bdoscientist/Launcher
-
+## Credits
+- The generate of One-Time Password (OTP) implementation is based on https://github.com/LTruijens/google-auth-csharp
+- This Launcher is Based on/Forked from https://github.com/bdoscientist/Launcher
 <p align="center">
   <img width="363" height="237" src="https://user-images.githubusercontent.com/42134925/112936280-5b105780-90da-11eb-868d-d9a193c62f57.png">
 </p>
 
 - A custom game launcher (NA/EU, non-steam) made to replace the official game launcher. 
 - Supports automatic login even if the account has set up for OTP system (The password and OTP are both stored locally and encrypted)
-- Enjoy the 5% drop rate buff without the annoyance of having to input OTP every single time on log in and having to painfully click the Confirm button because you can't just copy/paste and hit the enter key
+- Enjoy the 5% drop rate buff without the annoyance of having to input OTP every single time on log in, having to painfully click the Confirm button because you can't just copy/paste and hit the enter key
 
 ## Build Manually
 1. Visual Studio
