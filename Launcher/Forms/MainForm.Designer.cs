@@ -198,12 +198,12 @@
             // GithubLinkLabel
             // 
             this.GithubLinkLabel.AutoSize = true;
-            this.GithubLinkLabel.Location = new System.Drawing.Point(259, 186);
+            this.GithubLinkLabel.Location = new System.Drawing.Point(209, 186);
             this.GithubLinkLabel.Name = "GithubLinkLabel";
-            this.GithubLinkLabel.Size = new System.Drawing.Size(90, 13);
+            this.GithubLinkLabel.Size = new System.Drawing.Size(140, 13);
             this.GithubLinkLabel.TabIndex = 13;
             this.GithubLinkLabel.TabStop = true;
-            this.GithubLinkLabel.Text = "Original Creator";
+            this.GithubLinkLabel.Text = "Report An Issue (Click Me)";
             this.GithubLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.GithubLinkLabel_LinkClicked);
             // 
             // MainForm

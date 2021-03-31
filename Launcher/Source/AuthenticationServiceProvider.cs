@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net.NetworkInformation;
-using System.Security;
-using System.Security.Authentication;
-using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -40,13 +36,21 @@ namespace Launcher
             _httpClient?.Dispose();
         }
 
+        private bool ValidateJSON(string testString)
+        {
+            try
+            {
+                JToken.Parse(testString);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
-            if (string.IsNullOrEmpty(username))
-                throw new ArgumentNullException(nameof(username));
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException(nameof(password));
-            
             var request = (HttpWebRequest)WebRequest.Create(_launcherReturnUrl);
             
             //Set an account language (en-US) cookie to avoid duplicate request from fetching
@@ -74,7 +78,7 @@ namespace Launcher
         private async Task<string> RequestAuthenticationTokenAsync(string returnUrl, string username, string password, int otp)
         {
             if (string.IsNullOrEmpty(returnUrl))
-                throw new ArgumentNullException(nameof(returnUrl));
+                throw new AuthenticationException("Failed to to get (string)returnUrl within function RequestAuthenticationTokenAsync");
             
             using (var handler = new HttpClientHandler { CookieContainer = _cookieContainer })
             using (var client = new HttpClient(handler) { BaseAddress = _authenticationToken })
@@ -94,33 +98,44 @@ namespace Launcher
                     if (!result.IsSuccessStatusCode)
                         return null;
 
-                    var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-                    var returnUrlJson = resultJson["returnUrl"].ToString();
-
-                    if (string.IsNullOrEmpty(returnUrlJson))
-                        throw new ArgumentNullException(nameof(returnUrlJson));
-
-                    var request = (HttpWebRequest) WebRequest.Create(resultJson["returnUrl"].Value<string>());
-                    
-                    if(otp != 0)
-                        request = await VerifyOtpAsync(otp.ToString("D6"), returnUrl, request);
-
-                    request.CookieContainer = _cookieContainer;
-                    request.Method = "GET";
-                    request.UserAgent = "BLACKDESERT";
-                    
-                    using (var response = (HttpWebResponse) request.GetResponse())
+                    var resultContent = await result.Content.ReadAsStringAsync();
+                    if (ValidateJSON(resultContent))
                     {
-                        foreach (var cookie in _cookieContainer.GetCookies(response.ResponseUri))
-                        {
-                            var cookieStr = cookie.ToString();
-                            if (cookieStr.Contains("naeu.Session="))
-                            {
-                                return cookieStr;
-                            }
-                        }
+                        var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
+                        var returnUrlJson = resultJson["returnUrl"].Value<string>();
 
-                        return null;
+                        if (string.IsNullOrEmpty(returnUrlJson))
+                            throw new AuthenticationException("Failed to to get (string)returnUrlJson within function RequestAuthenticationTokenAsync");
+
+                        var request = (HttpWebRequest) WebRequest.Create(returnUrlJson);
+                    
+                        if(otp != 0)
+                            request = await VerifyOtpAsync(otp.ToString("D6"), returnUrl, request);
+                    
+                        if(request == null)
+                            throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function RequestAuthenticationTokenAsync");
+
+                        request.CookieContainer = _cookieContainer;
+                        request.Method = "GET";
+                        request.UserAgent = "BLACKDESERT";
+                    
+                        using (var response = (HttpWebResponse) request.GetResponse())
+                        {
+                            foreach (var cookie in _cookieContainer.GetCookies(response.ResponseUri))
+                            {
+                                var cookieStr = cookie.ToString();
+                                if (cookieStr.Contains("naeu.Session="))
+                                {
+                                    return cookieStr;
+                                }
+                            }
+
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        throw new AuthenticationException("Failed to validate JSON within function RequestAuthenticationTokenAsync");
                     }
                 }
             }
@@ -129,9 +144,9 @@ namespace Launcher
         private async Task<HttpWebRequest> VerifyOtpAsync(string otp, string returnUrl, HttpWebRequest request)
         {
             if (string.IsNullOrEmpty(returnUrl))
-                throw new ArgumentNullException(nameof(returnUrl));
+                throw new AuthenticationException("Failed to to get (string)returnUrl within function VerifyOtpAsync");
             if (request == null)
-                throw new ArgumentNullException(nameof(request));
+                throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function VerifyOtpAsync");
 
             request.CookieContainer = _cookieContainer;
             request.Method = "GET";
@@ -144,9 +159,8 @@ namespace Launcher
                 //construct the loginEncrypt from response url
                 var startPos = responseUri.LastIndexOf("loginEncrypt=", StringComparison.Ordinal) +
                                "loginEncrypt=".Length;
-                var length = responseUri.Length - startPos;
+                var length = responseUri.Length - startPos - "&_isChannelling=0".Length;
                 var loginEncrypt = responseUri.Substring(startPos, length);
-                
                 
                 using (var handler = new HttpClientHandler { CookieContainer = _cookieContainer })
                 using (var client = new HttpClient(handler) { BaseAddress = _authenticationEndPointOTP })
@@ -154,7 +168,8 @@ namespace Launcher
                     var data = $"_code={otp}&" +
                                $"_returnUrl={returnUrl}&" +
                                $"_isBackUpCodeAuth=false&" +
-                               $"_loginEncrypt={loginEncrypt}";
+                               $"_loginEncrypt={loginEncrypt}&" +
+                               $"_isLauncehr=true";
                 
                     var message = new HttpRequestMessage(HttpMethod.Post, _authenticationEndPointOTP);
                     message.Headers.Add("User-Agent", "BLACKDESERT");
@@ -166,14 +181,22 @@ namespace Launcher
                         if (!result.IsSuccessStatusCode)
                             return null;
 
-                        var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-                        var okUrlJson = resultJson["okUrl"].ToString();
-
-                        //a message will return if encounters an OTP authentication error
-                        if (okUrlJson == "/")
-                            throw new AuthenticationException( $"OTP Authentication error, message={ resultJson["message"] }");
+                        var resultContent = await result.Content.ReadAsStringAsync();
+                        if (ValidateJSON(resultContent))
+                        {
+                            var resultJson = JsonConvert.DeserializeObject<JObject>(resultContent);
+                            var returnUrlJson = resultJson["returnUrl"].Value<string>();
+                            
+                            //a message will return if encounters an OTP authentication error
+                            if (string.IsNullOrEmpty(returnUrlJson))
+                                throw new AuthenticationException( $"OTP authentication error, resultMsg: { resultJson["resultMsg"] }");
                         
-                        return (HttpWebRequest) WebRequest.Create(resultJson["okUrl"].Value<string>());
+                            return (HttpWebRequest) WebRequest.Create(returnUrlJson);
+                        }
+                        else
+                        {
+                            throw new AuthenticationException("Failed to validate JSON within function VerifyOtpAsync");
+                        }
                     }
                 }
             }
@@ -214,13 +237,21 @@ namespace Launcher
                     if (!result.IsSuccessStatusCode)
                         return null;
             
-                    var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-                    var resultMsgJson = resultJson["_result"]["resultMsg"].ToString();
+                    var resultContent = await result.Content.ReadAsStringAsync();
+                    if (ValidateJSON(resultContent))
+                    {
+                        var resultJson = JsonConvert.DeserializeObject<JObject>(resultContent);
+                        var resultMsgJson = resultJson["_result"]["resultMsg"].Value<string>();
 
-                    if (string.IsNullOrEmpty(resultMsgJson))
-                        throw new ArgumentNullException(nameof(resultMsgJson));
+                        if (string.IsNullOrEmpty(resultMsgJson))
+                            throw new AuthenticationException("Failed to get (string)resultMsgJson within function RequestPlayTokenAsync");
 
-                    return resultJson["_result"]["resultMsg"].Value<string>();
+                        return resultMsgJson;
+                    }
+                    else
+                    {
+                        throw new AuthenticationException("Failed to validate JSON within function RequestPlayTokenAsync");
+                    }
                 }
             }
         }

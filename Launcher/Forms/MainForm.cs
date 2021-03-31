@@ -146,7 +146,7 @@ namespace Launcher
 
         private void GithubLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/bdoscientist/Launcher");
+            Process.Start("https://github.com/jsoctocat/BDO-Launcher/issues");
         }
 
         private bool CheckGameDirectoryPathAndPrompt()
@@ -307,7 +307,7 @@ namespace Launcher
 
                 if (playToken == null)
                 {
-                    MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update)",
+                    MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update, please create an issue on my GitHub)",
                         "Authentication Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
