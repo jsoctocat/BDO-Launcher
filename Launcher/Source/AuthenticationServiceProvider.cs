@@ -52,14 +52,14 @@ namespace Launcher
         public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
             var request = (HttpWebRequest)WebRequest.Create(_launcherReturnUrl);
-            
-            //Set an account language (en-US) cookie to avoid duplicate request from fetching
-            _cookieContainer.Add(new Cookie("Account_lang", "en-US") { Domain = _authenticationToken.Host });
-            
-            //Pearl Abyss launcher need a cookie container to storage security cookies.
+
+            // Pearl Abyss launcher need a cookie container to storage security cookies.
             request.CookieContainer = _cookieContainer;
             request.UserAgent = "BLACKDESERT";
+            request.Headers.Add("Accept-Language", "en-US");
+            request.Accept = "text/html,application/xhtml+xml,*/*";
             request.Method = "GET";
+            
             using (var response = (HttpWebResponse)request.GetResponse())
             {
                 var responseUri = response.ResponseUri.ToString();
@@ -116,8 +116,8 @@ namespace Launcher
                             throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function RequestAuthenticationTokenAsync");
 
                         request.CookieContainer = _cookieContainer;
-                        request.Method = "GET";
                         request.UserAgent = "BLACKDESERT";
+                        request.Method = "GET";
                     
                         using (var response = (HttpWebResponse) request.GetResponse())
                         {
@@ -149,8 +149,8 @@ namespace Launcher
                 throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function VerifyOtpAsync");
 
             request.CookieContainer = _cookieContainer;
-            request.Method = "GET";
             request.UserAgent = "BLACKDESERT";
+            request.Method = "GET";
             
             using (var response = (HttpWebResponse) request.GetResponse())
             {

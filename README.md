@@ -35,7 +35,7 @@
 1. Grab the Master Password when sign up for OTP refer to the image above
 2. **this should be the only time you ever see your master password**
 3. Finish signing up for the OTP feature normally
-Using automatic feature does not mean you don't need OTP, weekly updates must be done through official launcher
+4. Using automatic feature does not mean you don't need OTP, weekly updates must be done through official launcher
 
 #### Option B: Manual
 

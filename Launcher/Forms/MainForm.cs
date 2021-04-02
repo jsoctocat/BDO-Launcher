@@ -314,7 +314,7 @@ namespace Launcher
 
                     return false;
                 }
-
+                
                 if (!GameMode32BitCheckBox.Checked)
                     playToken += " -eac_launcher_settings Settings64.json";
 
