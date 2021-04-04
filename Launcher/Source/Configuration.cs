@@ -17,6 +17,8 @@ namespace Launcher
         private bool _gamemode32bit;
         private bool _rememberData;
         private bool _loginAutomatically;
+        private bool _launcherUpdate;
+        private bool _gameUpdate;
         private string _gameDirectoryPath;
         
         public string Username
@@ -59,6 +61,16 @@ namespace Launcher
             get => _loginAutomatically;
             set => _loginAutomatically = value;
         }
+        public bool LauncherUpdate
+        {
+            get => _launcherUpdate;
+            set => _launcherUpdate = value;
+        }
+        public bool GameUpdate
+        {
+            get => _gameUpdate;
+            set => _gameUpdate = value;
+        }
         public string GameDirectoryPath
         {
             get => _gameDirectoryPath;
@@ -75,6 +87,8 @@ namespace Launcher
             _gamemode32bit = false;
             _rememberData = false;
             _loginAutomatically = false;
+            _launcherUpdate = false;
+            _gameUpdate = false;
             _gameDirectoryPath = null;
         }
 
@@ -109,7 +123,5 @@ namespace Launcher
             else
                 _encryptedOtp = CryptographyManager.Encrypt(password);
         }
-
     }
-
 }

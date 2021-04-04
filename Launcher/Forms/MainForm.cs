@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
 
 namespace Launcher
 {
@@ -11,6 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
+        private string _version = "1.0.9";
         
         public MainForm()
         {
@@ -18,7 +21,68 @@ namespace Launcher
             _otp = new Otp();
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async Task CheckVersion(bool launcherUpdate, bool gameUpdate)
+        {
+            Uri launcherVersionUrl = 
+                new Uri("https://gist.githubusercontent.com/jsoctocat/4aeb78c8b7d92aca96911afa393614d5/raw/version");
+            
+            // Check version on load
+            using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
+            using (var client = new HttpClient(handler) { BaseAddress = launcherVersionUrl })
+            {
+                using (var result = await client.GetAsync(launcherVersionUrl))
+                {
+                    if (!result.IsSuccessStatusCode)
+                        return;
+                    
+                    var resultContent = await result.Content.ReadAsStringAsync();
+                    string[] versions = resultContent.Split(',');
+
+                    // Check for launcher update
+                    if (launcherUpdate && _version != versions[0])
+                    {
+                        if (MessageBox.Show(
+                            "New version is available for this launcher, would you like to update?",
+                            "Custom Launcher Update Notice",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Asterisk
+                        ) == DialogResult.Yes)
+                        {
+                            Process.Start("https://github.com/jsoctocat/BDO-Launcher/releases");
+                            Close();
+                        }
+                    }
+                    
+                    if (gameUpdate)
+                    {
+                        var metaFilePath = Path.Combine(_configuration.GameDirectoryPath, "Paz", "pad00000.meta");
+                        FileStream metaFile = new FileStream(metaFilePath, FileMode.Open);
+                        
+                        var clientVersionBytes = 4;
+                        var buffer = new byte[clientVersionBytes];
+                        metaFile.Read(buffer, 0, clientVersionBytes);
+                        var clientVersion = BitConverter.ToInt32(buffer, 0);
+
+                        if (clientVersion < int.Parse(versions[1]))
+                        {
+                            if (MessageBox.Show(
+                                "Game version is lower than required to start\nWould you like to start the official launcher?",
+                                "Game Update Notice",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Asterisk
+                            ) == DialogResult.Yes)
+                            {
+                                var gameExecutableFilePath = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertLauncher.exe");
+                                Process.Start(gameExecutableFilePath);
+                                Close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             _configuration = ConfigurationManager.Load();
 
@@ -47,6 +111,14 @@ namespace Launcher
             GameMode32BitCheckBox.Checked = _configuration.GameMode32Bit;
             RememberDataCheckBox.Checked = _configuration.RememberData;
             LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
+            launcherUpdateCheckBox.Checked = _configuration.LauncherUpdate;
+            gameUpdateCheckBox.Checked = _configuration.GameUpdate;
+
+            // Check for new version on start up
+            if (_configuration.LauncherUpdate || _configuration.GameUpdate)
+            {
+                await CheckVersion(_configuration.LauncherUpdate, _configuration.GameUpdate);
+            }
 
             if (_configuration.LoginAutomatically)
             {
@@ -61,7 +133,7 @@ namespace Launcher
                 _configuration.Username = UsernameTextBox.Text;
                 _configuration.SetPassword(PasswordTextBox.Text);
             }
-            //Always save OTP
+            // Always save OTP
             _configuration.SetOtp(OtpTextBox.Text);
 
             ConfigurationManager.Save(_configuration);
@@ -69,7 +141,7 @@ namespace Launcher
 
         private void OtpCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            //Do not allow edit OTP if Otp is enabled
+            // Do not allow edit OTP if Otp is enabled
             OtpTextBox.Enabled = !OtpCheckBox.Checked;
             
             _configuration.Otp = OtpCheckBox.Checked;
@@ -109,6 +181,20 @@ namespace Launcher
                 RememberDataCheckBox.Enabled = true;
 
             _configuration.LoginAutomatically = LoginAutomaticallyCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
+        }
+
+        private void launcherUpdate_CheckedChanged(object sender, EventArgs e)
+        {
+            _configuration.LauncherUpdate = launcherUpdateCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
+        }
+        
+        private void gameUpdateCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _configuration.GameUpdate = gameUpdateCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
@@ -314,7 +400,7 @@ namespace Launcher
 
                     return false;
                 }
-                
+
                 if (!GameMode32BitCheckBox.Checked)
                     playToken += " -eac_launcher_settings Settings64.json";
 
@@ -339,5 +425,4 @@ namespace Launcher
             return true;
         }
     }
-
 }

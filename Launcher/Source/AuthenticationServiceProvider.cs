@@ -24,11 +24,12 @@ namespace Launcher
             new Uri("https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount"); 
         
         private readonly HttpClient _httpClient;
-        private readonly CookieContainer _cookieContainer = new CookieContainer();
+        private readonly CookieContainer _cookieContainer;
 
         public AuthenticationServiceProvider()
         {
             _httpClient = new HttpClient();
+            _cookieContainer = new CookieContainer();
         }
 
         public void Dispose()
@@ -51,16 +52,18 @@ namespace Launcher
 
         public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
-            var request = (HttpWebRequest)WebRequest.Create(_launcherReturnUrl);
+            var request = WebRequest.Create(_launcherReturnUrl) as HttpWebRequest;
+            
+            if(request == null)
+                throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function AuthenticateAsync");
 
-            // Pearl Abyss launcher need a cookie container to storage security cookies.
+            // Pearl Abyss launcher need a cookie container to storage security cookies
             request.CookieContainer = _cookieContainer;
             request.UserAgent = "BLACKDESERT";
             request.Headers.Add("Accept-Language", "en-US");
-            request.Accept = "text/html,application/xhtml+xml,*/*";
             request.Method = "GET";
             
-            using (var response = (HttpWebResponse)request.GetResponse())
+            using (WebResponse response = request.GetResponse())
             {
                 var responseUri = response.ResponseUri.ToString();
 
@@ -107,7 +110,7 @@ namespace Launcher
                         if (string.IsNullOrEmpty(returnUrlJson))
                             throw new AuthenticationException("Failed to to get (string)returnUrlJson within function RequestAuthenticationTokenAsync");
 
-                        var request = (HttpWebRequest) WebRequest.Create(returnUrlJson);
+                        var request = WebRequest.Create(returnUrlJson) as HttpWebRequest;
                     
                         if(otp != 0)
                             request = await VerifyOtpAsync(otp.ToString("D6"), returnUrl, request);
@@ -119,7 +122,7 @@ namespace Launcher
                         request.UserAgent = "BLACKDESERT";
                         request.Method = "GET";
                     
-                        using (var response = (HttpWebResponse) request.GetResponse())
+                        using (WebResponse response = request.GetResponse())
                         {
                             foreach (var cookie in _cookieContainer.GetCookies(response.ResponseUri))
                             {
@@ -152,7 +155,7 @@ namespace Launcher
             request.UserAgent = "BLACKDESERT";
             request.Method = "GET";
             
-            using (var response = (HttpWebResponse) request.GetResponse())
+            using (WebResponse response = request.GetResponse())
             {
                 var responseUri = response.ResponseUri.ToString();
 

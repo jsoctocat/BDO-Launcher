@@ -41,6 +41,8 @@
             this.GameMode32BitCheckBox = new System.Windows.Forms.CheckBox();
             this.RememberDataCheckBox = new System.Windows.Forms.CheckBox();
             this.LoginAutomaticallyCheckBox = new System.Windows.Forms.CheckBox();
+            this.launcherUpdateCheckBox = new System.Windows.Forms.CheckBox();
+            this.gameUpdateCheckBox = new System.Windows.Forms.CheckBox();
             this.StartGameButton = new System.Windows.Forms.Button();
             this.GameDirectoryPathLinkLabel = new System.Windows.Forms.LinkLabel();
             this.GithubLinkLabel = new System.Windows.Forms.LinkLabel();
@@ -60,11 +62,13 @@
             this.LoginGroupBox.Controls.Add(this.GameMode32BitCheckBox);
             this.LoginGroupBox.Controls.Add(this.RememberDataCheckBox);
             this.LoginGroupBox.Controls.Add(this.LoginAutomaticallyCheckBox);
+            this.LoginGroupBox.Controls.Add(this.launcherUpdateCheckBox);
+            this.LoginGroupBox.Controls.Add(this.gameUpdateCheckBox);
             this.LoginGroupBox.Controls.Add(this.StartGameButton);
             this.LoginGroupBox.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.LoginGroupBox.Location = new System.Drawing.Point(12, 12);
             this.LoginGroupBox.Name = "LoginGroupBox";
-            this.LoginGroupBox.Size = new System.Drawing.Size(337, 164);
+            this.LoginGroupBox.Size = new System.Drawing.Size(337, 186);
             this.LoginGroupBox.TabIndex = 1;
             this.LoginGroupBox.TabStop = false;
             this.LoginGroupBox.Text = "Login";
@@ -174,9 +178,29 @@
             this.LoginAutomaticallyCheckBox.UseVisualStyleBackColor = true;
             this.LoginAutomaticallyCheckBox.CheckedChanged += new System.EventHandler(this.LoginAutomaticallyCheckBox_CheckedChanged);
             // 
+            // launcherUpdateCheckBox
+            // 
+            this.launcherUpdateCheckBox.Location = new System.Drawing.Point(16, 130);
+            this.launcherUpdateCheckBox.Name = "launcherUpdateCheckBox";
+            this.launcherUpdateCheckBox.Size = new System.Drawing.Size(152, 24);
+            this.launcherUpdateCheckBox.TabIndex = 12;
+            this.launcherUpdateCheckBox.Text = "Check Launcher Update";
+            this.launcherUpdateCheckBox.UseVisualStyleBackColor = true;
+            this.launcherUpdateCheckBox.CheckedChanged += new System.EventHandler(this.launcherUpdate_CheckedChanged);
+            // 
+            // gameUpdateCheckBox
+            // 
+            this.gameUpdateCheckBox.Location = new System.Drawing.Point(193, 130);
+            this.gameUpdateCheckBox.Name = "gameUpdateCheckBox";
+            this.gameUpdateCheckBox.Size = new System.Drawing.Size(131, 24);
+            this.gameUpdateCheckBox.TabIndex = 13;
+            this.gameUpdateCheckBox.Text = "Check Game Update";
+            this.gameUpdateCheckBox.UseVisualStyleBackColor = true;
+            this.gameUpdateCheckBox.CheckedChanged += new System.EventHandler(this.gameUpdateCheckBox_CheckedChanged);
+            // 
             // StartGameButton
             // 
-            this.StartGameButton.Location = new System.Drawing.Point(83, 130);
+            this.StartGameButton.Location = new System.Drawing.Point(86, 157);
             this.StartGameButton.Name = "StartGameButton";
             this.StartGameButton.Size = new System.Drawing.Size(155, 23);
             this.StartGameButton.TabIndex = 11;
@@ -187,7 +211,7 @@
             // GameDirectoryPathLinkLabel
             // 
             this.GameDirectoryPathLinkLabel.AutoSize = true;
-            this.GameDirectoryPathLinkLabel.Location = new System.Drawing.Point(12, 186);
+            this.GameDirectoryPathLinkLabel.Location = new System.Drawing.Point(12, 201);
             this.GameDirectoryPathLinkLabel.Name = "GameDirectoryPathLinkLabel";
             this.GameDirectoryPathLinkLabel.Size = new System.Drawing.Size(81, 13);
             this.GameDirectoryPathLinkLabel.TabIndex = 12;
@@ -198,7 +222,7 @@
             // GithubLinkLabel
             // 
             this.GithubLinkLabel.AutoSize = true;
-            this.GithubLinkLabel.Location = new System.Drawing.Point(209, 186);
+            this.GithubLinkLabel.Location = new System.Drawing.Point(212, 201);
             this.GithubLinkLabel.Name = "GithubLinkLabel";
             this.GithubLinkLabel.Size = new System.Drawing.Size(140, 13);
             this.GithubLinkLabel.TabIndex = 13;
@@ -211,7 +235,7 @@
             this.AcceptButton = this.StartGameButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(364, 208);
+            this.ClientSize = new System.Drawing.Size(364, 223);
             this.Controls.Add(this.GameDirectoryPathLinkLabel);
             this.Controls.Add(this.GithubLinkLabel);
             this.Controls.Add(this.LoginGroupBox);
@@ -230,10 +254,6 @@
             this.PerformLayout();
         }
 
-        private System.Windows.Forms.CheckBox OtpCheckBox;
-
-        private System.Windows.Forms.TextBox OtpTextBox;
-
         #endregion
 
         private System.Windows.Forms.GroupBox LoginGroupBox;
@@ -241,11 +261,15 @@
         private System.Windows.Forms.TextBox UsernameTextBox;
         private System.Windows.Forms.Label PasswordLabel;
         private System.Windows.Forms.TextBox PasswordTextBox;
+        private System.Windows.Forms.CheckBox OtpCheckBox;
+        private System.Windows.Forms.TextBox OtpTextBox;
         private System.Windows.Forms.Label RegionLabel;
         private System.Windows.Forms.ComboBox RegionComboBox;
         private System.Windows.Forms.CheckBox GameMode32BitCheckBox;
         private System.Windows.Forms.CheckBox RememberDataCheckBox;
         private System.Windows.Forms.CheckBox LoginAutomaticallyCheckBox;
+        private System.Windows.Forms.CheckBox launcherUpdateCheckBox;
+        private System.Windows.Forms.CheckBox gameUpdateCheckBox;
         private System.Windows.Forms.Button StartGameButton;
         private System.Windows.Forms.LinkLabel GithubLinkLabel;
         private System.Windows.Forms.LinkLabel GameDirectoryPathLinkLabel;
