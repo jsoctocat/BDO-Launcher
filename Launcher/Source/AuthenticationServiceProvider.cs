@@ -60,9 +60,12 @@ namespace Launcher
                 
                 // Check resultMsg
                 var resultJObject = JsonConvert.DeserializeObject<JObject>(ResponseData);
-                var resultMsg = resultJObject.ContainsKey("resultMsg");
-                if (resultMsg && resultJObject["resultMsg"] != null)
-                    MessageBox.Show(resultJObject["resultMsg"].Value<string>());
+                if (resultJObject.ContainsKey("resultMsg"))
+                {
+                    var resultMsg = resultJObject["resultMsg"].Value<string>();
+                    if(resultMsg.Length > 0)
+                        MessageBox.Show(resultMsg);
+                }
             }
             else
             {
