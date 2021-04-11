@@ -28,7 +28,7 @@ namespace Launcher
             {
                 var postData = new PostData();
 
-                postData.AddData($"macAddr={null}&serverKey=NA");
+                postData.AddData($"macAddr={null}&serverKey={AuthenticationServiceProvider._region}");
 
                 request.Method = "POST";
                 request.PostData = postData;
@@ -110,6 +110,7 @@ namespace Launcher
     {
         private const string _launcherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
         private const string _authenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
+        public static string _region = null;
         
         public AuthenticationServiceProvider()
         {
@@ -127,6 +128,7 @@ namespace Launcher
         
         public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
+            _region = region;
             string otpString = otp.ToString("D6");
             
             var browserSettings = new BrowserSettings()
@@ -165,21 +167,6 @@ namespace Launcher
                 
                 await LoadPageAsync(browser);
                 await LoadPageAsync(browser, _authenticationEndPoint);
-
-                string sessionID = "naeu.Session=";
-                
-                var cookieManager = browser.GetCookieManager();
-                var visitor = new TaskCookieVisitor();
-                cookieManager.VisitUrlCookies("https://launcher.naeu.playblackdesert.com/", true, visitor);
-                var cookies = await visitor.Task;
-                foreach (var cookie in cookies)
-                {
-                    var cookieStr = cookie.Name;
-                    if (cookieStr == "naeu.Session")
-                    {
-                        sessionID += cookie.Value;
-                    }
-                }
 
                 var resultJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
                 if (resultJObject["_result"]["resultMsg"] == null)
