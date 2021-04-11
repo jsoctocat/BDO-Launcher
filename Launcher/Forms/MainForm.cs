@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private string _version = "1.0.9";
+        private const string _version = "1.1.0";
         
         public MainForm()
         {
@@ -373,53 +373,51 @@ namespace Launcher
                 return false;
             }
 
-            using (AuthenticationServiceProvider authenticationServiceProvider = new AuthenticationServiceProvider())
+            var authenticationServiceProvider = new AuthenticationServiceProvider();
+            var otp = 0;
+            if (OtpCheckBox.Checked)
             {
-                var otp = 0;
-                if (OtpCheckBox.Checked)
-                {
-                    // Skip if not using master OTP
-                    if(!string.IsNullOrEmpty(OtpTextBox.Text))
-                        _otp.Password = Base32Converter.ToBytes(OtpTextBox.Text);
-                    
-                    otp = _otp.OneTimePassword;
-                }
+                // Skip if not using master OTP
+                if(!string.IsNullOrEmpty(OtpTextBox.Text))
+                    _otp.Password = Base32Converter.ToBytes(OtpTextBox.Text);
+                
+                otp = _otp.OneTimePassword;
+            }
 
-                var playToken = await authenticationServiceProvider.AuthenticateAsync(
-                    UsernameTextBox.Text, 
-                    PasswordTextBox.Text, 
-                    RegionComboBox.SelectedItem.ToString(), 
-                    otp);
+            var playToken = await authenticationServiceProvider.AuthenticateAsync(
+                UsernameTextBox.Text, 
+                PasswordTextBox.Text, 
+                RegionComboBox.SelectedItem.ToString(), 
+                otp);
 
-                if (playToken == null)
-                {
-                    MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update, please create an issue on my GitHub)",
-                        "Authentication Error",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+            if (playToken == null)
+            {
+                MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update, please create an issue on my GitHub)",
+                    "Authentication Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
 
-                    return false;
-                }
+                return false;
+            }
 
-                if (!GameMode32BitCheckBox.Checked)
-                    playToken += " -eac_launcher_settings Settings64.json";
+            if (!GameMode32BitCheckBox.Checked)
+                playToken += " -eac_launcher_settings Settings64.json";
 
-                using (var process = new Process())
-                {
-                    process.StartInfo.FileName = "CMD";
-                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
-                    process.StartInfo.UseShellExecute = true;
-                    process.StartInfo.RedirectStandardOutput = false;
-                    process.StartInfo.CreateNoWindow = true;
-                    process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
-                    process.Start();
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "CMD";
+                process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
+                process.StartInfo.UseShellExecute = true;
+                process.StartInfo.RedirectStandardOutput = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
+                process.Start();
 
-                    // The following will start the game normally
-                    //process.StartInfo.FileName = gameExecutableFilePath;
-                    //process.StartInfo.Arguments = playToken;
-                    //process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
-                    //process.Start();
-                }
+                // The following will start the game normally
+                //process.StartInfo.FileName = gameExecutableFilePath;
+                //process.StartInfo.Arguments = playToken;
+                //process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
+                //process.Start();
             }
 
             return true;

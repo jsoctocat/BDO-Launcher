@@ -15,7 +15,8 @@
 ## Build Manually
 1. Visual Studio
 2. Grab Newtonsoft.Json version 11.0.1 Package from NuGet (Requires NuGet 2.12 or higher)
-3. Choose Build Solution from the Build menu. The Output window shows the results of the build process.
+3. Grab CefSharp.OffScreen version 89.0.170 Package from NuGet (Requires NuGet 5.0.0 or higher)
+4. Choose Build Solution from the Build menu. The Output window shows the results of the build process.
 
 ## Features
 - Stripped any unnecessary connections/assets that are not needed to start the game

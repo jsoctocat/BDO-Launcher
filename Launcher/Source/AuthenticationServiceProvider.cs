@@ -1,262 +1,220 @@
 ﻿using System;
-using System.Net;
-using System.Net.Http;
 using System.Security.Authentication;
-using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using CefSharp;
+using CefSharp.OffScreen;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Launcher
 {
-    public class AuthenticationServiceProvider : IDisposable
+    // https://github.com/cefsharp/CefSharp/wiki/General-Usage#request-interception
+    public class CustomResourceRequestHandler : CefSharp.Handler.ResourceRequestHandler
     {
-        private readonly Uri _launcherReturnUrl = 
-            new Uri("https://launcher.naeu.playblackdesert.com/Login/Index");
-        
-        private readonly Uri _authenticationToken = 
-            new Uri("https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess");
-        
-        private readonly Uri _authenticationEndPointOTP = 
-            new Uri("https://account.pearlabyss.com/Member/Login/LoginOtpAuth");
-        
-        private readonly Uri _authenticationEndPoint =
-            new Uri("https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount"); 
-        
-        private readonly HttpClient _httpClient;
-        private readonly CookieContainer _cookieContainer;
+        public static string ResponseData;
 
+        private readonly System.IO.MemoryStream _memoryStream = new System.IO.MemoryStream();
+        protected override CefReturnValue OnBeforeResourceLoad(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
+        {
+            // intercept the followings to grab resultMsg
+            if (request.Url == "https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess" ||
+                request.Url == "https://account.pearlabyss.com/Member/Login/LoginOtpAuth")
+            {
+                return CefReturnValue.Continue;
+            }
+            
+            if (request.Url == "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount")
+            {
+                var postData = new PostData();
+
+                postData.AddData($"macAddr={null}&serverKey=NA");
+
+                request.Method = "POST";
+                request.PostData = postData;
+                //Set the Content-Type header to whatever suites your requirement
+                request.SetHeaderByName("Content-Type", "application/x-www-form-urlencoded", true);
+                //Set additional Request headers as required.
+
+                return CefReturnValue.Continue;
+            }
+
+            return CefReturnValue.Cancel;
+        }
+        
+        protected override IResponseFilter GetResourceResponseFilter(IWebBrowser browserControl, IBrowser browser, IFrame frame,
+            IRequest request, IResponse response)
+        {
+            return new CefSharp.ResponseFilter.StreamResponseFilter(_memoryStream);
+        }
+
+        protected override void OnResourceLoadComplete(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request,
+            IResponse response, UrlRequestStatus status, long receivedContentLength)
+        {
+            //You can now get the data from the stream
+            var bytes = _memoryStream.ToArray();
+
+            if (response.Charset == "utf-8")
+            {
+                ResponseData = System.Text.Encoding.UTF8.GetString(bytes);
+                
+                // Check resultMsg
+                var resultJObject = JsonConvert.DeserializeObject<JObject>(ResponseData);
+                var resultMsg = resultJObject.ContainsKey("resultMsg");
+                if (resultMsg && resultJObject["resultMsg"] != null)
+                    MessageBox.Show(resultJObject["resultMsg"].Value<string>());
+            }
+            else
+            {
+                //Deal with different encoding here
+            }
+        }
+    }
+    public class CustomRequestHandler : CefSharp.Handler.RequestHandler
+    {
+        protected override bool OnBeforeBrowse(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool userGesture, bool isRedirect)
+        {
+            // For security reasons you should perform validation on the url to confirm that it's safe before proceeding.
+            if (request.Url.StartsWith("https://launcher.naeu.playblackdesert.com") || 
+                request.Url.StartsWith("https://account.pearlabyss.com"))
+            {
+                return base.OnBeforeBrowse(chromiumWebBrowser, browser, frame, request, userGesture, isRedirect);
+            }
+            return true;
+        }
+        
+        protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
+        {
+            // intercept the followings to grab resultMsg
+            if (request.Url == "https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess" ||
+                request.Url == "https://account.pearlabyss.com/Member/Login/LoginOtpAuth" ||
+                request.Url == "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount")
+            {
+                return new CustomResourceRequestHandler();
+            }
+            
+            // intercept any Url that's not specified, used to block tracking scripts/sites for faster performance
+            if (request.Url.StartsWith("https://launcher.naeu.playblackdesert.com") || 
+                request.Url.StartsWith("https://account.pearlabyss.com") ||
+                request.Url.Contains("https://s1.pearlcdn.com/account/contents/js"))
+            {
+                // Default behaviour, url will be loaded normally.
+                return null;
+            }
+
+            return new CustomResourceRequestHandler();
+        }
+    }
+    
+    public class AuthenticationServiceProvider
+    {
+        private const string _launcherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
+        private const string _authenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
+        
         public AuthenticationServiceProvider()
         {
-            _httpClient = new HttpClient();
-            _cookieContainer = new CookieContainer();
-        }
-
-        public void Dispose()
-        {
-            _httpClient?.Dispose();
-        }
-
-        private bool ValidateJSON(string testString)
-        {
-            try
+            CefSharpSettings.SubprocessExitIfParentProcessClosed = true;
+            var settings = new CefSettings()
             {
-                JToken.Parse(testString);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
-        {
-            var request = WebRequest.Create(_launcherReturnUrl) as HttpWebRequest;
+                UserAgent = "BLACKDESERT",
+                AcceptLanguageList = "en-US"
+            };
             
-            if(request == null)
-                throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function AuthenticateAsync");
-
-            // Pearl Abyss launcher need a cookie container to storage security cookies
-            request.CookieContainer = _cookieContainer;
-            request.UserAgent = "BLACKDESERT";
-            request.Headers.Add("Accept-Language", "en-US");
-            request.Method = "GET";
-            
-            using (WebResponse response = request.GetResponse())
-            {
-                var responseUri = response.ResponseUri.ToString();
-
-                //construct the returnUrl from response url
-                var startPos = responseUri.LastIndexOf("returnUrl=", StringComparison.Ordinal) + "returnUrl=".Length;
-                var length = responseUri.Length - startPos;
-                var returnUrl = responseUri.Substring(startPos, length);
-
-                var playTokenEndpoint = await RequestAuthenticationTokenAsync(returnUrl, username, password, otp);
-            
-                return await RequestPlayTokenAsync(playTokenEndpoint, region);
-            }
-        }
-
-        private async Task<string> RequestAuthenticationTokenAsync(string returnUrl, string username, string password, int otp)
-        {
-            if (string.IsNullOrEmpty(returnUrl))
-                throw new AuthenticationException("Failed to to get (string)returnUrl within function RequestAuthenticationTokenAsync");
-            
-            using (var handler = new HttpClientHandler { CookieContainer = _cookieContainer })
-            using (var client = new HttpClient(handler) { BaseAddress = _authenticationToken })
-            {
-                //required parameter(s): _returnUrl, joinType, username, password
-                var data = $"_returnUrl={returnUrl}" +
-                           "&_joinType=1" +
-                           $"&_email={username}" +
-                           $"&_password={password}";
-                
-                var message = new HttpRequestMessage(HttpMethod.Post, _authenticationToken);
-                message.Headers.Add("User-Agent", "BLACKDESERT");
-                message.Content = new StringContent(data, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-                using (var result = await client.SendAsync(message))
-                {
-                    if (!result.IsSuccessStatusCode)
-                        return null;
-
-                    var resultContent = await result.Content.ReadAsStringAsync();
-                    if (ValidateJSON(resultContent))
-                    {
-                        var resultJson = JsonConvert.DeserializeObject<JObject>(await result.Content.ReadAsStringAsync());
-                        var returnUrlJson = resultJson["returnUrl"].Value<string>();
-
-                        if (string.IsNullOrEmpty(returnUrlJson))
-                            throw new AuthenticationException("Failed to to get (string)returnUrlJson within function RequestAuthenticationTokenAsync");
-
-                        var request = WebRequest.Create(returnUrlJson) as HttpWebRequest;
-                    
-                        if(otp != 0)
-                            request = await VerifyOtpAsync(otp.ToString("D6"), returnUrl, request);
-                    
-                        if(request == null)
-                            throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function RequestAuthenticationTokenAsync");
-
-                        request.CookieContainer = _cookieContainer;
-                        request.UserAgent = "BLACKDESERT";
-                        request.Method = "GET";
-                    
-                        using (WebResponse response = request.GetResponse())
-                        {
-                            foreach (var cookie in _cookieContainer.GetCookies(response.ResponseUri))
-                            {
-                                var cookieStr = cookie.ToString();
-                                if (cookieStr.Contains("naeu.Session="))
-                                {
-                                    return cookieStr;
-                                }
-                            }
-
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        throw new AuthenticationException("Failed to validate JSON within function RequestAuthenticationTokenAsync");
-                    }
-                }
-            }
-        }
-
-        private async Task<HttpWebRequest> VerifyOtpAsync(string otp, string returnUrl, HttpWebRequest request)
-        {
-            if (string.IsNullOrEmpty(returnUrl))
-                throw new AuthenticationException("Failed to to get (string)returnUrl within function VerifyOtpAsync");
-            if (request == null)
-                throw new AuthenticationException("Failed to to get (HttpWebRequest)request within function VerifyOtpAsync");
-
-            request.CookieContainer = _cookieContainer;
-            request.UserAgent = "BLACKDESERT";
-            request.Method = "GET";
-            
-            using (WebResponse response = request.GetResponse())
-            {
-                var responseUri = response.ResponseUri.ToString();
-
-                //construct the loginEncrypt from response url
-                var startPos = responseUri.LastIndexOf("loginEncrypt=", StringComparison.Ordinal) +
-                               "loginEncrypt=".Length;
-                var length = responseUri.Length - startPos - "&_isChannelling=0".Length;
-                var loginEncrypt = responseUri.Substring(startPos, length);
-                
-                using (var handler = new HttpClientHandler { CookieContainer = _cookieContainer })
-                using (var client = new HttpClient(handler) { BaseAddress = _authenticationEndPointOTP })
-                {
-                    var data = $"_code={otp}&" +
-                               $"_returnUrl={returnUrl}&" +
-                               $"_isBackUpCodeAuth=false&" +
-                               $"_loginEncrypt={loginEncrypt}&" +
-                               $"_isLauncehr=true";
-                
-                    var message = new HttpRequestMessage(HttpMethod.Post, _authenticationEndPointOTP);
-                    message.Headers.Add("User-Agent", "BLACKDESERT");
-                    message.Headers.Add("X-Requested-With", "XMLHttpRequest");
-                    message.Content = new StringContent(data, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-                    using (var result = await client.SendAsync(message))
-                    {
-                        if (!result.IsSuccessStatusCode)
-                            return null;
-
-                        var resultContent = await result.Content.ReadAsStringAsync();
-                        if (ValidateJSON(resultContent))
-                        {
-                            var resultJson = JsonConvert.DeserializeObject<JObject>(resultContent);
-                            var returnUrlJson = resultJson["returnUrl"].Value<string>();
-                            
-                            //a message will return if encounters an OTP authentication error
-                            if (string.IsNullOrEmpty(returnUrlJson))
-                                throw new AuthenticationException( $"OTP authentication error, resultMsg: { resultJson["resultMsg"] }");
-                        
-                            return (HttpWebRequest) WebRequest.Create(returnUrlJson);
-                        }
-                        else
-                        {
-                            throw new AuthenticationException("Failed to validate JSON within function VerifyOtpAsync");
-                        }
-                    }
-                }
-            }
+            // Only initialize Cef once, this is a framework limitation
+            if(!Cef.IsInitialized)
+                Cef.Initialize(settings,true, browserProcessHandler: null);
         }
         
-        private async Task<string> RequestPlayTokenAsync(string authenticationToken, string region)
+        public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
-            if (string.IsNullOrEmpty(authenticationToken))
-                throw new AuthenticationException("Failed to retrieve authentication token, please check your username and password. (Could also be an issue of an invalid OTP)");
-
-            //Disable UseCookies, only authentication token is required to start the game from here
-            using (var handler = new HttpClientHandler { UseCookies = false })
-            using (var client = new HttpClient(handler) { BaseAddress = _authenticationEndPoint })
-            {
-                var message = new HttpRequestMessage(HttpMethod.Post, _authenticationEndPoint);
-                message.Headers.Add("User-Agent", "BLACKDESERT");
-                message.Headers.Add("Cookie", authenticationToken);
-                
-                // supports registered PC feature, fully implemented but disabled for now, uncomment the code to use
-                // will grab the current PC's mac address
-                // var mac = 
-                // (
-                //     from nic in NetworkInterface.GetAllNetworkInterfaces()
-                //     where nic.OperationalStatus == OperationalStatus.Up
-                //     select nic.GetPhysicalAddress().ToString()
-                // ).FirstOrDefault();
-                //
-                // if (string.IsNullOrEmpty(mac))
-                //     throw new SecurityException(nameof(mac));
-                //
-                // var macAddr = string.Join ("-", Enumerable.Range(0, 6)
-                //     .Select(i => mac.Substring(i * 2, 2)));
-    
-                message.Content = new StringContent($"macAddr={null}&serverKey={region}", Encoding.UTF8, "application/x-www-form-urlencoded");
-                
-                using (var result = await client.SendAsync(message))
-                {
-                    if (!result.IsSuccessStatusCode)
-                        return null;
+            string otpString = otp.ToString("D6");
             
-                    var resultContent = await result.Content.ReadAsStringAsync();
-                    if (ValidateJSON(resultContent))
-                    {
-                        var resultJson = JsonConvert.DeserializeObject<JObject>(resultContent);
-                        var resultMsgJson = resultJson["_result"]["resultMsg"].Value<string>();
+            var browserSettings = new BrowserSettings()
+            {
+                WindowlessFrameRate = 1,
+                ImageLoading = CefState.Disabled,
+                JavascriptAccessClipboard = CefState.Disabled,
+                JavascriptCloseWindows = CefState.Disabled,
+                JavascriptDomPaste = CefState.Disabled
+            };
+            
+            using (var browser = new ChromiumWebBrowser(_launcherReturnUrl, browserSettings))
+            {
+                browser.RequestHandler = new CustomRequestHandler();
+                
+                await LoadPageAsync(browser);
+                var loginScript = $@"
+                            document.querySelector('#_email').value = '{username}';
+                            document.querySelector('#_password').value = '{password}';
+                            document.querySelector('#btnLogin').click();";
+                await browser.EvaluateScriptAsync(loginScript);
 
-                        if (string.IsNullOrEmpty(resultMsgJson))
-                            throw new AuthenticationException("Failed to get (string)resultMsgJson within function RequestPlayTokenAsync");
+                await LoadPageAsync(browser);
+                var otpScript = $@"
+                        document.querySelector('#otpInput1').value = '{otpString[0]}';
+                        document.querySelector('#otpInput2').value = '{otpString[1]}';
+                        document.querySelector('#otpInput3').value = '{otpString[2]}';
+                        document.querySelector('#otpInput4').value = '{otpString[3]}'; 
+                        document.querySelector('#otpInput5').value = '{otpString[4]}';
+                        document.querySelector('#otpInput6').value = '{otpString[5]}';
+                        document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
+                await browser.EvaluateScriptAsync(otpScript).ContinueWith(u =>
+                {
+                    browser.EvaluateScriptAsync(otpScript);
+                });
+                
+                await LoadPageAsync(browser);
+                await LoadPageAsync(browser, _authenticationEndPoint);
 
-                        return resultMsgJson;
-                    }
-                    else
+                string sessionID = "naeu.Session=";
+                
+                var cookieManager = browser.GetCookieManager();
+                var visitor = new TaskCookieVisitor();
+                cookieManager.VisitUrlCookies("https://launcher.naeu.playblackdesert.com/", true, visitor);
+                var cookies = await visitor.Task;
+                foreach (var cookie in cookies)
+                {
+                    var cookieStr = cookie.Name;
+                    if (cookieStr == "naeu.Session")
                     {
-                        throw new AuthenticationException("Failed to validate JSON within function RequestPlayTokenAsync");
+                        sessionID += cookie.Value;
                     }
                 }
+
+                var resultJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
+                if (resultJObject["_result"]["resultMsg"] == null)
+                    throw new AuthenticationException("Failed to get PlayToken");
+                
+                var resultMsgJson = resultJObject["_result"]["resultMsg"].Value<string>();
+
+                Cef.Shutdown();
+                return resultMsgJson;
             }
+        }
+
+        private Task LoadPageAsync(IWebBrowser browser, string address = null)
+        {
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            EventHandler<LoadingStateChangedEventArgs> handler = null;
+            handler = (sender, args) =>
+            {
+                // Wait for while page to finish loading not just the first frame
+                if (!args.IsLoading)
+                {
+                    browser.LoadingStateChanged -= handler;
+                    // Important that the continuation runs async using TaskCreationOptions.RunContinuationsAsynchronously
+                    tcs.TrySetResult(true);
+                }
+            };
+
+            browser.LoadingStateChanged += handler;
+
+            if (!string.IsNullOrEmpty(address))
+            {
+                browser.Load(address);
+            }
+            return tcs.Task;
         }
     }
 }
