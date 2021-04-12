@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.0b";
+        private const string _version = "1.1.0c";
         
         public MainForm()
         {
@@ -390,9 +390,9 @@ namespace Launcher
                 RegionComboBox.SelectedItem.ToString(), 
                 otp);
 
-            if (playToken == null)
+            if (!playToken.StartsWith("0x"))
             {
-                MessageBox.Show("Username, Password, or OTP is incorrect.\n(Or this launcher needs an update, please create an issue on my GitHub)",
+                MessageBox.Show($"{playToken}",
                     "Authentication Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);

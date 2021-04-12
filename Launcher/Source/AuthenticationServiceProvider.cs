@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Security.Authentication;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using CefSharp;
 using CefSharp.OffScreen;
 using Newtonsoft.Json;
@@ -28,7 +27,7 @@ namespace Launcher
             {
                 var postData = new PostData();
 
-                postData.AddData($"macAddr={null}&serverKey={AuthenticationServiceProvider._region}");
+                postData.AddData($"macAddr={null}&serverKey={AuthenticationServiceProvider.Region}");
 
                 request.Method = "POST";
                 request.PostData = postData;
@@ -57,15 +56,6 @@ namespace Launcher
             if (response.Charset == "utf-8")
             {
                 ResponseData = System.Text.Encoding.UTF8.GetString(bytes);
-                
-                // Check resultMsg
-                var resultJObject = JsonConvert.DeserializeObject<JObject>(ResponseData);
-                if (resultJObject.ContainsKey("resultMsg"))
-                {
-                    var resultMsg = resultJObject["resultMsg"].Value<string>();
-                    if(resultMsg.Length > 0)
-                        MessageBox.Show(resultMsg);
-                }
             }
             else
             {
@@ -111,10 +101,10 @@ namespace Launcher
     
     public class AuthenticationServiceProvider
     {
-        private const string _launcherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
-        private const string _authenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
-        public static string _region = null;
-        
+        private const string LauncherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
+        private const string AuthenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
+        public static string Region = null;
+
         public AuthenticationServiceProvider()
         {
             CefSharpSettings.SubprocessExitIfParentProcessClosed = true;
@@ -131,7 +121,7 @@ namespace Launcher
         
         public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
         {
-            _region = region;
+            Region = region;
             string otpString = otp.ToString("D6");
             
             var browserSettings = new BrowserSettings()
@@ -142,11 +132,11 @@ namespace Launcher
                 JavascriptCloseWindows = CefState.Disabled,
                 JavascriptDomPaste = CefState.Disabled
             };
-            
-            using (var browser = new ChromiumWebBrowser(_launcherReturnUrl, browserSettings))
+            using (var browser = new ChromiumWebBrowser(LauncherReturnUrl, browserSettings))
             {
                 browser.RequestHandler = new CustomRequestHandler();
-                
+                string errorMsg = null;
+               
                 await LoadPageAsync(browser);
                 var loginScript = $@"
                             document.querySelector('#_email').value = '{username}';
@@ -154,7 +144,10 @@ namespace Launcher
                             document.querySelector('#btnLogin').click();";
                 await browser.EvaluateScriptAsync(loginScript);
 
-                await LoadPageAsync(browser);
+                errorMsg = await CheckErrorMsg();
+                if (!string.IsNullOrEmpty(errorMsg))
+                    return errorMsg;
+
                 var otpScript = $@"
                         document.querySelector('#otpInput1').value = '{otpString[0]}';
                         document.querySelector('#otpInput2').value = '{otpString[1]}';
@@ -163,23 +156,44 @@ namespace Launcher
                         document.querySelector('#otpInput5').value = '{otpString[4]}';
                         document.querySelector('#otpInput6').value = '{otpString[5]}';
                         document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
-                await browser.EvaluateScriptAsync(otpScript).ContinueWith(u =>
-                {
-                    browser.EvaluateScriptAsync(otpScript);
-                });
+                await browser.EvaluateScriptAsync(otpScript);
                 
-                await LoadPageAsync(browser);
-                await LoadPageAsync(browser, _authenticationEndPoint);
+                errorMsg = await CheckErrorMsg();
+                if (!string.IsNullOrEmpty(errorMsg))
+                    return errorMsg;
+                
+                await LoadPageAsync(browser, AuthenticationEndPoint);
 
-                var resultJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
-                if (resultJObject["_result"]["resultMsg"] == null)
+                var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
+                if (responseJObject["_result"]["resultMsg"] == null)
                     throw new AuthenticationException("Failed to get PlayToken");
                 
-                var resultMsgJson = resultJObject["_result"]["resultMsg"].Value<string>();
+                var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
 
                 Cef.Shutdown();
-                return resultMsgJson;
+                return resultMsg;
             }
+        }
+
+        private async Task<string> CheckErrorMsg()
+        {
+            // wait for any previous js scripts to finish, might needs a better implementation
+            // Callback might be better than time based, since users might have slower internet/computer
+            await Task.Delay(250);
+
+            if (string.IsNullOrEmpty(CustomResourceRequestHandler.ResponseData))
+                return null;
+
+            // Check resultMsg
+            var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
+            if (responseJObject.ContainsKey("resultMsg"))
+            {
+                var errorMsg = responseJObject["resultMsg"].Value<string>();
+                if (!string.IsNullOrEmpty(errorMsg))
+                    return errorMsg;
+            }
+            
+            return null;
         }
 
         private Task LoadPageAsync(IWebBrowser browser, string address = null)
