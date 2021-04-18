@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.0c";
+        private const string _version = "1.1.0d";
         
         public MainForm()
         {
@@ -392,12 +392,14 @@ namespace Launcher
 
             if (!playToken.StartsWith("0x"))
             {
-                MessageBox.Show($"{playToken}",
-                    "Authentication Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                return false;
+                if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
+                        "Authentication Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error)
+                    == DialogResult.OK)
+                {
+                    Close();
+                }
             }
 
             if (!GameMode32BitCheckBox.Checked)
