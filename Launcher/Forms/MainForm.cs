@@ -6,6 +6,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using CefSharp;
 
 namespace Launcher
 {
@@ -13,7 +14,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.0c";
+        private const string _version = "1.1.0d";
         
         public MainForm()
         {
@@ -392,12 +393,14 @@ namespace Launcher
 
             if (!playToken.StartsWith("0x"))
             {
-                MessageBox.Show($"{playToken}",
+                if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't related to your username/password/otp",
                     "Authentication Error",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                return false;
+                    MessageBoxIcon.Error)
+                    == DialogResult.OK)
+                {
+                    Close();
+                };
             }
 
             if (!GameMode32BitCheckBox.Checked)
@@ -419,7 +422,7 @@ namespace Launcher
                 //process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
                 //process.Start();
             }
-
+            
             return true;
         }
     }

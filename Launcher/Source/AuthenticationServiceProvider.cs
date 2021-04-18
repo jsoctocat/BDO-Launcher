@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Authentication;
 using System.Threading.Tasks;
 using CefSharp;
 using CefSharp.OffScreen;
@@ -136,56 +135,73 @@ namespace Launcher
             {
                 browser.RequestHandler = new CustomRequestHandler();
                 string errorMsg = null;
-               
+
                 await LoadPageAsync(browser);
                 var loginScript = $@"
-                            document.querySelector('#_email').value = '{username}';
-                            document.querySelector('#_password').value = '{password}';
-                            document.querySelector('#btnLogin').click();";
-                await browser.EvaluateScriptAsync(loginScript);
+                    document.querySelector('#_email').value = '{username}';
+                    document.querySelector('#_password').value = '{password}';";
+                await browser.EvaluateScriptAsync(loginScript).ContinueWith(tsk =>
+                {
+                    browser.EvaluateScriptAsync("document.querySelector('#btnLogin').click();");
+                });
 
-                errorMsg = await CheckErrorMsg();
+                errorMsg = await CheckErrorMsg("loginScript");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
 
                 var otpScript = $@"
-                        document.querySelector('#otpInput1').value = '{otpString[0]}';
-                        document.querySelector('#otpInput2').value = '{otpString[1]}';
-                        document.querySelector('#otpInput3').value = '{otpString[2]}';
-                        document.querySelector('#otpInput4').value = '{otpString[3]}'; 
-                        document.querySelector('#otpInput5').value = '{otpString[4]}';
-                        document.querySelector('#otpInput6').value = '{otpString[5]}';
-                        document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
-                await browser.EvaluateScriptAsync(otpScript);
+                    document.querySelector('#otpInput1').value = '{otpString[0]}';
+                    document.querySelector('#otpInput2').value = '{otpString[1]}';
+                    document.querySelector('#otpInput3').value = '{otpString[2]}';
+                    document.querySelector('#otpInput4').value = '{otpString[3]}'; 
+                    document.querySelector('#otpInput5').value = '{otpString[4]}';
+                    document.querySelector('#otpInput6').value = '{otpString[5]}';";
+                await browser.EvaluateScriptAsync(otpScript).ContinueWith(tsk =>
+                {
+                    browser.EvaluateScriptAsync("document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();");
+                });;
                 
-                errorMsg = await CheckErrorMsg();
+                errorMsg = await CheckErrorMsg("otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
-                
+
+                await LoadPageAsync(browser);
                 await LoadPageAsync(browser, AuthenticationEndPoint);
+                
+                if (string.IsNullOrEmpty(CustomResourceRequestHandler.ResponseData))
+                    return "Failed to get PlayToken, ResponseData was empty";
 
                 var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
                 if (responseJObject["_result"]["resultMsg"] == null)
-                    throw new AuthenticationException("Failed to get PlayToken");
+                    return "Failed to get PlayToken, resultMsg does not exit";
                 
                 var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
-
+                
+                if (string.IsNullOrEmpty(resultMsg))
+                    return "Failed to get PlayToken, resultMsg was empty";
+                
                 Cef.Shutdown();
                 return resultMsg;
             }
         }
 
-        private async Task<string> CheckErrorMsg()
+        private async Task<string> CheckErrorMsg(string step)
         {
             // wait for any previous js scripts to finish, might needs a better implementation
             // Callback might be better than time based, since users might have slower internet/computer
-            await Task.Delay(250);
-
+            int delayCounter = 50;
+            do
+            {
+                await Task.Delay(delayCounter);
+                delayCounter += 50;
+            } while (CustomResourceRequestHandler.ResponseData == null && delayCounter < 1000);
+            
             if (string.IsNullOrEmpty(CustomResourceRequestHandler.ResponseData))
-                return null;
+                return "Failed to get a reply at step " + step + " from Pearl Abyss after waiting for 9500(ms)";
 
             // Check resultMsg
             var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
+            CustomResourceRequestHandler.ResponseData = null;
             if (responseJObject.ContainsKey("resultMsg"))
             {
                 var errorMsg = responseJObject["resultMsg"].Value<string>();
@@ -193,6 +209,7 @@ namespace Launcher
                     return errorMsg;
             }
             
+            // No error found, returning null
             return null;
         }
 
