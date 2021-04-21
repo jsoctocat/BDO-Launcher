@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using CefSharp;
 using CefSharp.OffScreen;
 using Newtonsoft.Json;
@@ -158,16 +159,38 @@ namespace Launcher
                 errorMsg = await CheckErrorMsg(browser, otpScript, "otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
-                
-                await LoadPageAsync(browser);
-                await LoadPageAsync(browser, AuthenticationEndPoint);
-                
-                if (string.IsNullOrEmpty(CustomResourceRequestHandler.ResponseData))
-                    return "Failed to get PlayToken, ResponseData was empty";
 
-                var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
-                if (responseJObject["_result"]["resultMsg"] == null)
-                    return "Failed to get PlayToken, resultMsg does not exit";
+                await LoadPageAsync(browser);
+                var maintenanceCheckScript = @"
+                    (function(){
+                        var query = document.querySelector('.box_error');
+                        var result = null;
+                        if(query != null)
+                            result = query.innerText;
+                        return result; 
+                    })()";
+                await browser.EvaluateScriptAsync(maintenanceCheckScript).ContinueWith(tsk =>
+                {
+                    if (tsk.Result.Success && tsk.Result.Result != null)
+                    {
+                        errorMsg = tsk.Result.Result.ToString();
+                    }
+                });
+                if (!string.IsNullOrEmpty(errorMsg))
+                    return errorMsg;
+                
+                await LoadPageAsync(browser, AuthenticationEndPoint);
+
+                var responseData = CustomResourceRequestHandler.ResponseData;
+                if (!ValidateJSON(responseData))
+                {
+                    return "Failed to get PlayToken, ResponseData returned an invalidate JSON";
+                }
+
+                var responseJObject = JsonConvert.DeserializeObject<JObject>(responseData);
+                // https://stackoverflow.com/questions/28352072/what-does-question-mark-and-dot-operator-mean-in-c-sharp-6-0
+                if (responseJObject["_result"]?["resultMsg"] == null)
+                    return "Failed to get PlayToken, _result or resultMsg does not exit";
                 
                 var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
                 
@@ -207,7 +230,7 @@ namespace Launcher
             // No error found, returning null
             return null;
         }
-
+        
         private Task LoadPageAsync(IWebBrowser browser, string address = null)
         {
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -231,6 +254,19 @@ namespace Launcher
                 browser.Load(address);
             }
             return tcs.Task;
+        }
+        
+        private bool ValidateJSON(string testString)
+        {
+            try
+            {
+                JToken.Parse(testString);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

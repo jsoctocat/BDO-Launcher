@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.0d";
+        private const string _version = "1.1.1";
         
         public MainForm()
         {
