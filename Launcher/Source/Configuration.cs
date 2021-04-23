@@ -13,6 +13,8 @@ namespace Launcher
         private byte[] _encryptedPassword;
         private bool _otp;
         private byte[] _encryptedOtp;
+        private bool _pcRegistration;
+        private string _macAddress;
         private int _regionComboBox;
         private bool _gamemode32bit;
         private bool _rememberData;
@@ -45,6 +47,16 @@ namespace Launcher
         {
             get => _regionComboBox;
             set => _regionComboBox = value;
+        }
+        public bool PcRegistration
+        {
+            get => _pcRegistration;
+            set => _pcRegistration = value;
+        }
+        public string MacAddress
+        {
+            get => _macAddress;
+            set => _macAddress = value;
         }
         public bool GameMode32Bit
         {
@@ -84,6 +96,8 @@ namespace Launcher
             _otp = false;
             _encryptedOtp = null;
             _regionComboBox = 0;
+            _pcRegistration = false;
+            _macAddress = null;
             _gamemode32bit = false;
             _rememberData = false;
             _loginAutomatically = false;

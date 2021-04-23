@@ -30,6 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.LoginGroupBox = new System.Windows.Forms.GroupBox();
+            this.MacAddressTextBox = new System.Windows.Forms.TextBox();
+            this.MacAddressCheckBox = new System.Windows.Forms.CheckBox();
             this.UsernameTextBox = new System.Windows.Forms.TextBox();
             this.UsernameLabel = new System.Windows.Forms.Label();
             this.PasswordLabel = new System.Windows.Forms.Label();
@@ -51,6 +53,8 @@
             // 
             // LoginGroupBox
             // 
+            this.LoginGroupBox.Controls.Add(this.MacAddressTextBox);
+            this.LoginGroupBox.Controls.Add(this.MacAddressCheckBox);
             this.LoginGroupBox.Controls.Add(this.UsernameTextBox);
             this.LoginGroupBox.Controls.Add(this.UsernameLabel);
             this.LoginGroupBox.Controls.Add(this.PasswordLabel);
@@ -68,10 +72,27 @@
             this.LoginGroupBox.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.LoginGroupBox.Location = new System.Drawing.Point(12, 12);
             this.LoginGroupBox.Name = "LoginGroupBox";
-            this.LoginGroupBox.Size = new System.Drawing.Size(337, 186);
+            this.LoginGroupBox.Size = new System.Drawing.Size(337, 219);
             this.LoginGroupBox.TabIndex = 1;
             this.LoginGroupBox.TabStop = false;
             this.LoginGroupBox.Text = "Login";
+            // 
+            // MacAddressTextBox
+            // 
+            this.MacAddressTextBox.Location = new System.Drawing.Point(129, 107);
+            this.MacAddressTextBox.Name = "MacAddressTextBox";
+            this.MacAddressTextBox.Size = new System.Drawing.Size(190, 22);
+            this.MacAddressTextBox.TabIndex = 15;
+            // 
+            // MacAddressCheckBox
+            // 
+            this.MacAddressCheckBox.Location = new System.Drawing.Point(16, 105);
+            this.MacAddressCheckBox.Name = "MacAddressCheckBox";
+            this.MacAddressCheckBox.Size = new System.Drawing.Size(107, 24);
+            this.MacAddressCheckBox.TabIndex = 14;
+            this.MacAddressCheckBox.Text = "PC Registration";
+            this.MacAddressCheckBox.UseVisualStyleBackColor = true;
+            this.MacAddressCheckBox.CheckedChanged += new System.EventHandler(this.MacAddressCheckBox_CheckedChanged);
             // 
             // UsernameTextBox
             // 
@@ -148,7 +169,7 @@
             // 
             // GameMode32BitCheckBox
             // 
-            this.GameMode32BitCheckBox.Location = new System.Drawing.Point(16, 103);
+            this.GameMode32BitCheckBox.Location = new System.Drawing.Point(16, 135);
             this.GameMode32BitCheckBox.Name = "GameMode32BitCheckBox";
             this.GameMode32BitCheckBox.Size = new System.Drawing.Size(56, 24);
             this.GameMode32BitCheckBox.TabIndex = 8;
@@ -159,7 +180,7 @@
             // RememberDataCheckBox
             // 
             this.RememberDataCheckBox.AutoSize = true;
-            this.RememberDataCheckBox.Location = new System.Drawing.Point(80, 107);
+            this.RememberDataCheckBox.Location = new System.Drawing.Point(83, 139);
             this.RememberDataCheckBox.Name = "RememberDataCheckBox";
             this.RememberDataCheckBox.Size = new System.Drawing.Size(107, 17);
             this.RememberDataCheckBox.TabIndex = 9;
@@ -170,7 +191,7 @@
             // LoginAutomaticallyCheckBox
             // 
             this.LoginAutomaticallyCheckBox.AutoSize = true;
-            this.LoginAutomaticallyCheckBox.Location = new System.Drawing.Point(193, 107);
+            this.LoginAutomaticallyCheckBox.Location = new System.Drawing.Point(193, 139);
             this.LoginAutomaticallyCheckBox.Name = "LoginAutomaticallyCheckBox";
             this.LoginAutomaticallyCheckBox.Size = new System.Drawing.Size(126, 17);
             this.LoginAutomaticallyCheckBox.TabIndex = 10;
@@ -180,7 +201,7 @@
             // 
             // launcherUpdateCheckBox
             // 
-            this.launcherUpdateCheckBox.Location = new System.Drawing.Point(16, 130);
+            this.launcherUpdateCheckBox.Location = new System.Drawing.Point(16, 162);
             this.launcherUpdateCheckBox.Name = "launcherUpdateCheckBox";
             this.launcherUpdateCheckBox.Size = new System.Drawing.Size(152, 24);
             this.launcherUpdateCheckBox.TabIndex = 12;
@@ -190,9 +211,9 @@
             // 
             // gameUpdateCheckBox
             // 
-            this.gameUpdateCheckBox.Location = new System.Drawing.Point(193, 130);
+            this.gameUpdateCheckBox.Location = new System.Drawing.Point(193, 162);
             this.gameUpdateCheckBox.Name = "gameUpdateCheckBox";
-            this.gameUpdateCheckBox.Size = new System.Drawing.Size(131, 24);
+            this.gameUpdateCheckBox.Size = new System.Drawing.Size(130, 24);
             this.gameUpdateCheckBox.TabIndex = 13;
             this.gameUpdateCheckBox.Text = "Check Game Update";
             this.gameUpdateCheckBox.UseVisualStyleBackColor = true;
@@ -200,7 +221,7 @@
             // 
             // StartGameButton
             // 
-            this.StartGameButton.Location = new System.Drawing.Point(86, 157);
+            this.StartGameButton.Location = new System.Drawing.Point(83, 190);
             this.StartGameButton.Name = "StartGameButton";
             this.StartGameButton.Size = new System.Drawing.Size(155, 23);
             this.StartGameButton.TabIndex = 11;
@@ -211,7 +232,7 @@
             // GameDirectoryPathLinkLabel
             // 
             this.GameDirectoryPathLinkLabel.AutoSize = true;
-            this.GameDirectoryPathLinkLabel.Location = new System.Drawing.Point(12, 201);
+            this.GameDirectoryPathLinkLabel.Location = new System.Drawing.Point(12, 234);
             this.GameDirectoryPathLinkLabel.Name = "GameDirectoryPathLinkLabel";
             this.GameDirectoryPathLinkLabel.Size = new System.Drawing.Size(81, 13);
             this.GameDirectoryPathLinkLabel.TabIndex = 12;
@@ -222,7 +243,7 @@
             // GithubLinkLabel
             // 
             this.GithubLinkLabel.AutoSize = true;
-            this.GithubLinkLabel.Location = new System.Drawing.Point(212, 201);
+            this.GithubLinkLabel.Location = new System.Drawing.Point(209, 234);
             this.GithubLinkLabel.Name = "GithubLinkLabel";
             this.GithubLinkLabel.Size = new System.Drawing.Size(140, 13);
             this.GithubLinkLabel.TabIndex = 13;
@@ -235,7 +256,7 @@
             this.AcceptButton = this.StartGameButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(364, 223);
+            this.ClientSize = new System.Drawing.Size(364, 256);
             this.Controls.Add(this.GameDirectoryPathLinkLabel);
             this.Controls.Add(this.GithubLinkLabel);
             this.Controls.Add(this.LoginGroupBox);
@@ -254,6 +275,7 @@
             this.PerformLayout();
         }
 
+
         #endregion
 
         private System.Windows.Forms.GroupBox LoginGroupBox;
@@ -265,6 +287,8 @@
         private System.Windows.Forms.TextBox OtpTextBox;
         private System.Windows.Forms.Label RegionLabel;
         private System.Windows.Forms.ComboBox RegionComboBox;
+        private System.Windows.Forms.CheckBox MacAddressCheckBox;
+        private System.Windows.Forms.TextBox MacAddressTextBox;
         private System.Windows.Forms.CheckBox GameMode32BitCheckBox;
         private System.Windows.Forms.CheckBox RememberDataCheckBox;
         private System.Windows.Forms.CheckBox LoginAutomaticallyCheckBox;

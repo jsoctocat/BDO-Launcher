@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CefSharp;
@@ -27,7 +30,7 @@ namespace Launcher
             {
                 var postData = new PostData();
 
-                postData.AddData($"macAddr={null}&serverKey={AuthenticationServiceProvider.Region}");
+                postData.AddData($"macAddr={AuthenticationServiceProvider.MacAddress}&serverKey={AuthenticationServiceProvider.Region}");
 
                 request.Method = "POST";
                 request.PostData = postData;
@@ -104,6 +107,7 @@ namespace Launcher
         private const string LauncherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
         private const string AuthenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
         public static string Region = null;
+        public static string MacAddress = null;
 
         public AuthenticationServiceProvider()
         {
@@ -119,11 +123,31 @@ namespace Launcher
                 Cef.Initialize(settings,true, browserProcessHandler: null);
         }
         
-        public async Task<string> AuthenticateAsync(string username, string password, string region, int otp)
+        public async Task<string> AuthenticateAsync(string username, string password, string region,
+            int otp, string macAddress)
         {
             Region = region;
             string otpString = otp.ToString("D6");
+
+            if (macAddress == "1")
+            {
+                // will grab the current PC's mac address
+                MacAddress = 
+                (
+                    from nic in NetworkInterface.GetAllNetworkInterfaces()
+                    where nic.OperationalStatus == OperationalStatus.Up
+                    select nic.GetPhysicalAddress().ToString()
+                ).FirstOrDefault();
             
+                if (string.IsNullOrEmpty(MacAddress))
+                    throw new SecurityException(nameof(MacAddress));
+            
+                MacAddress = string.Join ("-", Enumerable.Range(0, 6)
+                    .Select(i => MacAddress.Substring(i * 2, 2)));
+            }
+            else if (!string.IsNullOrEmpty(macAddress))
+                MacAddress = macAddress; //or use a given mac address
+
             var browserSettings = new BrowserSettings()
             {
                 WindowlessFrameRate = 1,
@@ -147,7 +171,9 @@ namespace Launcher
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
 
-                var otpScript = $@"
+                if (otp != 0)
+                {
+                    var otpScript = $@"
                     document.querySelector('#otpInput1').value = '{otpString[0]}';
                     document.querySelector('#otpInput2').value = '{otpString[1]}';
                     document.querySelector('#otpInput3').value = '{otpString[2]}';
@@ -156,9 +182,10 @@ namespace Launcher
                     document.querySelector('#otpInput6').value = '{otpString[5]}';
                     document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
                 
-                errorMsg = await CheckErrorMsg(browser, otpScript, "otpScript");
-                if (!string.IsNullOrEmpty(errorMsg))
-                    return errorMsg;
+                    errorMsg = await CheckErrorMsg(browser, otpScript, "otpScript");
+                    if (!string.IsNullOrEmpty(errorMsg))
+                        return errorMsg;
+                }
 
                 await LoadPageAsync(browser);
                 var maintenanceCheckScript = @"

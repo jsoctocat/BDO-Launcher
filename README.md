@@ -23,6 +23,7 @@
 - Support for one-time password (OTP)
 - Credential Saving (username, password, OTP)
 - Password and OTP are encrypted with PBKDF2 (see [rfc2898](https://tools.ietf.org/html/rfc2898) OR [rfc2898(wikipedia)](https://en.wikipedia.org/wiki/PBKDF2))
+- Support for PC Registration Service
 - Automatic Login
 - Removed the need for Admin Privilege to start the game
 - (OPTIONAL) To disable the automatic-login function, either edit the settings file (%AppData%\bdoscientist_Launcher\settings.json) or start the Launcher with the command-line argument "--disable-automatic-login"
@@ -39,9 +40,17 @@
 4. Using the automatic feature does not mean you don't need OTP, weekly updates must be done through the official launcher
 
 #### Option B: Manual
-1. Check the OTP box and leave the text field empty
+1. Check the OTP checkbox and leave the text field empty
 2. The launcher will prompt the user to enter a one-time password
 3. Hit the ENTER key or click Login
+
+## How to use PC Registration Service
+#### Option A: Automatic
+1. Check the PC Registration checkbox and leave the text field empty
+
+#### Option B: Manual
+1. Put in the MAC address you would like to use in the text field next to PC Registration checkbox
+2. Check the PC Registration checkbox
 
 ## FAQ
 *Why was this created?*

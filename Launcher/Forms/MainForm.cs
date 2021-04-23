@@ -103,11 +103,13 @@ namespace Launcher
             {
                 UsernameTextBox.Text = _configuration.Username;
                 PasswordTextBox.Text = _configuration.GetPassword();
+                MacAddressTextBox.Text = _configuration.MacAddress;
             }
 
             OtpCheckBox.Checked = _configuration.Otp;
             OtpTextBox.Text = _configuration.GetOtp();
             RegionComboBox.SelectedIndex = _configuration.RegionComboBox;
+            MacAddressCheckBox.Checked = _configuration.PcRegistration;
             GameMode32BitCheckBox.Checked = _configuration.GameMode32Bit;
             RememberDataCheckBox.Checked = _configuration.RememberData;
             LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
@@ -132,6 +134,7 @@ namespace Launcher
             {
                 _configuration.Username = UsernameTextBox.Text;
                 _configuration.SetPassword(PasswordTextBox.Text);
+                _configuration.MacAddress = MacAddressTextBox.Text;
             }
             // Always save OTP
             _configuration.SetOtp(OtpTextBox.Text);
@@ -153,6 +156,16 @@ namespace Launcher
         {
             _configuration.RegionComboBox = RegionComboBox.SelectedIndex;
             
+            ConfigurationManager.Save(_configuration);
+        }
+        
+        private void MacAddressCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            // Do not allow edit Mac Address if PC Registration is enabled
+            MacAddressTextBox.Enabled = !MacAddressCheckBox.Checked;
+            
+            _configuration.PcRegistration = MacAddressCheckBox.Checked;
+
             ConfigurationManager.Save(_configuration);
         }
 
@@ -375,6 +388,13 @@ namespace Launcher
 
             var authenticationServiceProvider = new AuthenticationServiceProvider();
             var otp = 0;
+            string macAddress = null;
+
+            if (MacAddressCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
+                macAddress = "1";
+            else if (MacAddressCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
+                macAddress = MacAddressTextBox.Text;
+                
             if (OtpCheckBox.Checked)
             {
                 // Skip if not using master OTP
@@ -388,7 +408,7 @@ namespace Launcher
                 UsernameTextBox.Text, 
                 PasswordTextBox.Text, 
                 RegionComboBox.SelectedItem.ToString(), 
-                otp);
+                otp, macAddress);
 
             if (!playToken.StartsWith("0x"))
             {
@@ -401,7 +421,7 @@ namespace Launcher
                     Close();
                 }
             }
-
+            
             if (!GameMode32BitCheckBox.Checked)
                 playToken += " -eac_launcher_settings Settings64.json";
 
