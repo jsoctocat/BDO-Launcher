@@ -50,7 +50,8 @@
 
 #### Option B: Manual
 1. Put in the MAC address you would like to use in the text field next to PC Registration checkbox
-2. Check the PC Registration checkbox
+2. An example: 00-10-5A-44-12-B5
+3. Check the PC Registration checkbox
 
 ## FAQ
 *Why was this created?*
