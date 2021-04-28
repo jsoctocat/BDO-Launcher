@@ -188,15 +188,18 @@ namespace Launcher
                 }
 
                 await LoadPageAsync(browser);
-                var maintenanceCheckScript = @"
+                var additionalErrorCheckScript = @"
                     (function(){
                         var query = document.querySelector('.box_error');
+                        var query2 = document.querySelector('.box_white');
                         var result = null;
                         if(query != null)
                             result = query.innerText;
+                        else if(query2 != null)
+                            result = query2.innerText;
                         return result; 
                     })()";
-                await browser.EvaluateScriptAsync(maintenanceCheckScript).ContinueWith(tsk =>
+                await browser.EvaluateScriptAsync(additionalErrorCheckScript).ContinueWith(tsk =>
                 {
                     if (tsk.Result.Success && tsk.Result.Result != null)
                     {
