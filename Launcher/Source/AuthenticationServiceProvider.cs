@@ -162,6 +162,10 @@ namespace Launcher
                 string errorMsg = null;
 
                 await LoadPageAsync(browser);
+                errorMsg = await AdditionalErrorsCheck(browser);
+                if (!string.IsNullOrEmpty(errorMsg))
+                    return errorMsg;
+                
                 var loginScript = $@"
                     document.querySelector('#_email').value = '{username}';
                     document.querySelector('#_password').value = '{password}';
@@ -188,24 +192,7 @@ namespace Launcher
                 }
 
                 await LoadPageAsync(browser);
-                var additionalErrorCheckScript = @"
-                    (function(){
-                        var query = document.querySelector('.box_error');
-                        var query2 = document.querySelector('.box_white');
-                        var result = null;
-                        if(query != null)
-                            result = query.innerText;
-                        else if(query2 != null)
-                            result = query2.innerText;
-                        return result; 
-                    })()";
-                await browser.EvaluateScriptAsync(additionalErrorCheckScript).ContinueWith(tsk =>
-                {
-                    if (tsk.Result.Success && tsk.Result.Result != null)
-                    {
-                        errorMsg = tsk.Result.Result.ToString();
-                    }
-                });
+                errorMsg = await AdditionalErrorsCheck(browser);
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
                 
@@ -259,6 +246,36 @@ namespace Launcher
             
             // No error found, returning null
             return null;
+        }
+        private async Task<string> AdditionalErrorsCheck(IWebBrowser browser)
+        {
+            // The following script checks for maintenance (.box_error) and
+            // password change notification (.box_white)
+            var additionalErrorsCheckScript = @"
+                    (function(){
+                        var query = document.querySelector('.box_error');
+                        var query2 = document.querySelector('.box_white');
+                        var result = null;
+                        if(query != null)
+                            result = query.innerText;
+                        else if(query2 != null)
+                            result = query2.innerText;
+                        return result; 
+                    })()";
+
+            string errorMsg = null;
+            
+            await browser.EvaluateScriptAsync(additionalErrorsCheckScript).ContinueWith(tsk =>
+            {
+                if (tsk.Result.Success && tsk.Result.Result != null)
+                {
+                    errorMsg = tsk.Result.Result.ToString();
+                }
+            });
+            if (!string.IsNullOrEmpty(errorMsg))
+                return errorMsg;
+            else
+                return null;
         }
         
         private Task LoadPageAsync(IWebBrowser browser, string address = null)
