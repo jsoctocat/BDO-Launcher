@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.2b";
+        private const string _version = "1.1.3";
         
         public MainForm()
         {
@@ -157,6 +157,22 @@ namespace Launcher
             _configuration.RegionComboBox = RegionComboBox.SelectedIndex;
             
             ConfigurationManager.Save(_configuration);
+            
+            var regionFilePath = Path.Combine(_configuration.GameDirectoryPath, "region");
+            var currentRegion = File.ReadAllText(regionFilePath);
+
+            if (currentRegion == RegionComboBox.SelectedItem.ToString()) return;
+            
+            string[] region = { "NA", "EU" };
+            string[] regionInfo =
+            {
+                $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=0\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.na.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://na-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://na-game-trade.naeu.playblackdesert.com/",
+                $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=1\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.eu.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://eu-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://eu-game-trade.naeu.playblackdesert.com/"
+            };
+                
+            File.WriteAllText(regionFilePath, region[RegionComboBox.SelectedIndex]);
+            File.WriteAllText(Path.Combine(_configuration.GameDirectoryPath, "service.ini"),
+                regionInfo[RegionComboBox.SelectedIndex]);
         }
         
         private void MacAddressCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -389,12 +405,12 @@ namespace Launcher
             var authenticationServiceProvider = new AuthenticationServiceProvider();
             var otp = 0;
             string macAddress = null;
-
+            
             if (MacAddressCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = "1";
             else if (MacAddressCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = MacAddressTextBox.Text;
-                
+            
             if (OtpCheckBox.Checked)
             {
                 // Skip if not using master OTP
@@ -403,13 +419,13 @@ namespace Launcher
                 
                 otp = _otp.OneTimePassword;
             }
-
+            
             var playToken = await authenticationServiceProvider.AuthenticateAsync(
                 UsernameTextBox.Text, 
                 PasswordTextBox.Text, 
                 RegionComboBox.SelectedItem.ToString(), 
                 otp, macAddress);
-
+            
             if (!playToken.StartsWith("0x"))
             {
                 if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
@@ -424,7 +440,7 @@ namespace Launcher
             
             if (!GameMode32BitCheckBox.Checked)
                 playToken += " -eac_launcher_settings Settings64.json";
-
+            
             using (var process = new Process())
             {
                 process.StartInfo.FileName = "CMD";
