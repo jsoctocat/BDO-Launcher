@@ -58,6 +58,10 @@ namespace Launcher
             // https://security.stackexchange.com/questions/178746/how-can-authy-use-google-authenticator-qr
             long timestamp = Convert.ToInt64(GetUnixTimestamp() / 30); 
             var data = BitConverter.GetBytes(timestamp).Reverse().ToArray();
+            
+            if (Password == null)
+                return;
+            
             Hmac = new HMACSHA1(Password).ComputeHash(data);
             _offset = Hmac.Last() & 0x0F;
             OneTimePassword = (

@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.LoginGroupBox = new System.Windows.Forms.GroupBox();
+            this.adminCheckBox = new System.Windows.Forms.CheckBox();
             this.MacAddressTextBox = new System.Windows.Forms.TextBox();
             this.MacAddressCheckBox = new System.Windows.Forms.CheckBox();
             this.UsernameTextBox = new System.Windows.Forms.TextBox();
@@ -53,6 +54,7 @@
             // 
             // LoginGroupBox
             // 
+            this.LoginGroupBox.Controls.Add(this.adminCheckBox);
             this.LoginGroupBox.Controls.Add(this.MacAddressTextBox);
             this.LoginGroupBox.Controls.Add(this.MacAddressCheckBox);
             this.LoginGroupBox.Controls.Add(this.UsernameTextBox);
@@ -76,6 +78,15 @@
             this.LoginGroupBox.TabIndex = 1;
             this.LoginGroupBox.TabStop = false;
             this.LoginGroupBox.Text = "Login";
+            // 
+            // adminCheckBox
+            // 
+            this.adminCheckBox.Location = new System.Drawing.Point(16, 189);
+            this.adminCheckBox.Name = "adminCheckBox";
+            this.adminCheckBox.Size = new System.Drawing.Size(141, 24);
+            this.adminCheckBox.TabIndex = 0;
+            this.adminCheckBox.Text = "Launch As Admin";
+            this.adminCheckBox.CheckedChanged += new System.EventHandler(this.adminCheckBox_CheckedChanged);
             // 
             // MacAddressTextBox
             // 
@@ -221,7 +232,7 @@
             // 
             // StartGameButton
             // 
-            this.StartGameButton.Location = new System.Drawing.Point(83, 190);
+            this.StartGameButton.Location = new System.Drawing.Point(163, 190);
             this.StartGameButton.Name = "StartGameButton";
             this.StartGameButton.Size = new System.Drawing.Size(155, 23);
             this.StartGameButton.TabIndex = 11;
@@ -275,6 +286,7 @@
             this.PerformLayout();
         }
 
+        private System.Windows.Forms.CheckBox adminCheckBox;
 
         #endregion
 

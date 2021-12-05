@@ -13,7 +13,7 @@ namespace Launcher
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.3";
+        private const string _version = "1.1.4";
         
         public MainForm()
         {
@@ -25,36 +25,54 @@ namespace Launcher
         {
             Uri launcherVersionUrl = 
                 new Uri("https://gist.githubusercontent.com/jsoctocat/4aeb78c8b7d92aca96911afa393614d5/raw/version");
+
+            Uri gameVersionUrl = new Uri("https://naeu-o-dn.playblackdesert.com/UploadData/client_version");
             
             // Check version on load
-            using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
-            using (var client = new HttpClient(handler) { BaseAddress = launcherVersionUrl })
-            {
-                using (var result = await client.GetAsync(launcherVersionUrl))
+            if (launcherUpdate)
+            {            
+                using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
+                using (var client = new HttpClient(handler) { BaseAddress = launcherVersionUrl })
                 {
-                    if (!result.IsSuccessStatusCode)
-                        return;
-                    
-                    var resultContent = await result.Content.ReadAsStringAsync();
-                    string[] versions = resultContent.Split(',');
-
-                    // Check for launcher update
-                    if (launcherUpdate && _version != versions[0])
+                    using (var result = await client.GetAsync(launcherVersionUrl))
                     {
-                        if (MessageBox.Show(
-                            "New version is available for this launcher, would you like to update?",
-                            "Custom Launcher Update Notice",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Asterisk
-                        ) == DialogResult.Yes)
+                        if (!result.IsSuccessStatusCode)
+                            return;
+                        
+                        // Grab latest version string from github
+                        var resultContent = await result.Content.ReadAsStringAsync();
+
+                        // Check for launcher update
+                        if (_version != resultContent)
                         {
-                            Process.Start("https://github.com/jsoctocat/BDO-Launcher/releases");
-                            Close();
+                            if (MessageBox.Show(
+                                "New version is available for this launcher, would you like to update?",
+                                "Custom Launcher Update Notice",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Asterisk
+                            ) == DialogResult.Yes)
+                            {
+                                Process.Start("https://github.com/jsoctocat/BDO-Launcher/releases");
+                                Close();
+                            }
                         }
                     }
-                    
-                    if (gameUpdate)
+                }
+            }
+
+            if (gameUpdate)
+            {
+                using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
+                using (var client = new HttpClient(handler) { BaseAddress = gameVersionUrl })
+                {
+                    using (var result = await client.GetAsync(gameVersionUrl))
                     {
+                        if (!result.IsSuccessStatusCode)
+                            return;
+                        
+                        var resultContent = await result.Content.ReadAsStringAsync();
+                        string[] versions = resultContent.Split('\n');
+                        
                         var metaFilePath = Path.Combine(_configuration.GameDirectoryPath, "Paz", "pad00000.meta");
                         FileStream metaFile = new FileStream(metaFilePath, FileMode.Open);
                         
@@ -63,7 +81,7 @@ namespace Launcher
                         metaFile.Read(buffer, 0, clientVersionBytes);
                         var clientVersion = BitConverter.ToInt32(buffer, 0);
 
-                        if (clientVersion < int.Parse(versions[1]))
+                        if (clientVersion < int.Parse(versions[0]))
                         {
                             if (MessageBox.Show(
                                 "Game version is lower than required to start\nWould you like to start the official launcher?",
@@ -80,6 +98,7 @@ namespace Launcher
                     }
                 }
             }
+
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
@@ -115,6 +134,7 @@ namespace Launcher
             LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
             launcherUpdateCheckBox.Checked = _configuration.LauncherUpdate;
             gameUpdateCheckBox.Checked = _configuration.GameUpdate;
+            adminCheckBox.Checked = _configuration.RunAsAdmin;
 
             // Check for new version on start up
             if (_configuration.LauncherUpdate || _configuration.GameUpdate)
@@ -155,13 +175,7 @@ namespace Launcher
         private void RegionComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configuration.RegionComboBox = RegionComboBox.SelectedIndex;
-            
             ConfigurationManager.Save(_configuration);
-            
-            var regionFilePath = Path.Combine(_configuration.GameDirectoryPath, "region");
-            var currentRegion = File.ReadAllText(regionFilePath);
-
-            if (currentRegion == RegionComboBox.SelectedItem.ToString()) return;
             
             string[] region = { "NA", "EU" };
             string[] regionInfo =
@@ -169,6 +183,19 @@ namespace Launcher
                 $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=0\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.na.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://na-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://na-game-trade.naeu.playblackdesert.com/",
                 $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=1\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.eu.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://eu-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://eu-game-trade.naeu.playblackdesert.com/"
             };
+            
+            var regionFilePath = Path.Combine(_configuration.GameDirectoryPath, "region");
+
+            if (!File.Exists(regionFilePath))
+            {
+                File.WriteAllText(regionFilePath, RegionComboBox.SelectedItem.ToString());
+                File.WriteAllText(Path.Combine(_configuration.GameDirectoryPath, "service.ini"),
+                    regionInfo[RegionComboBox.SelectedIndex]);
+            }
+            
+            var currentRegion = File.ReadAllText(regionFilePath);
+
+            if (currentRegion == RegionComboBox.SelectedItem.ToString()) return;
                 
             File.WriteAllText(regionFilePath, region[RegionComboBox.SelectedIndex]);
             File.WriteAllText(Path.Combine(_configuration.GameDirectoryPath, "service.ini"),
@@ -224,6 +251,13 @@ namespace Launcher
         private void gameUpdateCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             _configuration.GameUpdate = gameUpdateCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
+        }
+
+        private void adminCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _configuration.RunAsAdmin = adminCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
@@ -428,7 +462,18 @@ namespace Launcher
             
             if (!playToken.StartsWith("0x"))
             {
-                if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
+                if (playToken.Contains("Change Password"))
+                {
+                    if (MessageBox.Show($"Your password is too old, please login using the official launcher to change your password\n\nThis error is from the game server, it will come up every 3 months",
+                            "Password Too Old Error",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error)
+                        == DialogResult.OK)
+                    {
+                        Close();
+                    }
+                }
+                else if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
                         "Authentication Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error)
@@ -443,19 +488,26 @@ namespace Launcher
             
             using (var process = new Process())
             {
-                process.StartInfo.FileName = "CMD";
-                process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
                 process.StartInfo.UseShellExecute = true;
                 process.StartInfo.RedirectStandardOutput = false;
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
+                
+                if (!adminCheckBox.Checked)
+                {
+                    // RunAsInvoker
+                    process.StartInfo.FileName = "CMD";
+                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
+                }
+                else
+                {
+                    // RunAsAdmin
+                    process.StartInfo.Verb = "runas";
+                    process.StartInfo.FileName = gameExecutableFilePath;
+                    process.StartInfo.Arguments = playToken;
+                }
+                
                 process.Start();
-
-                // The following will start the game normally
-                //process.StartInfo.FileName = gameExecutableFilePath;
-                //process.StartInfo.Arguments = playToken;
-                //process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
-                //process.Start();
             }
 
             return true;

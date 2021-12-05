@@ -21,6 +21,7 @@ namespace Launcher
         private bool _loginAutomatically;
         private bool _launcherUpdate;
         private bool _gameUpdate;
+        private bool _runAsAdmin;
         private string _gameDirectoryPath;
         
         public string Username
@@ -83,6 +84,11 @@ namespace Launcher
             get => _gameUpdate;
             set => _gameUpdate = value;
         }
+        public bool RunAsAdmin
+        {
+            get => _runAsAdmin;
+            set => _runAsAdmin = value;
+        }
         public string GameDirectoryPath
         {
             get => _gameDirectoryPath;
@@ -103,6 +109,7 @@ namespace Launcher
             _loginAutomatically = false;
             _launcherUpdate = false;
             _gameUpdate = false;
+            _runAsAdmin = false;
             _gameDirectoryPath = null;
         }
 

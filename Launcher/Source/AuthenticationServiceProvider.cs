@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Security;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using CefSharp;
 using CefSharp.OffScreen;
 using Newtonsoft.Json;
@@ -161,8 +160,9 @@ namespace Launcher
                 browser.RequestHandler = new CustomRequestHandler();
                 string errorMsg = null;
 
-                await LoadPageAsync(browser);
-                errorMsg = await AdditionalErrorsCheck(browser);
+                await browser.WaitForInitialLoadAsync();
+                
+                errorMsg = await AdditionalErrorsCheck(browser, "maintenance");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
                 
@@ -191,8 +191,7 @@ namespace Launcher
                         return errorMsg;
                 }
 
-                await LoadPageAsync(browser);
-                errorMsg = await AdditionalErrorsCheck(browser);
+                errorMsg = await AdditionalErrorsCheck(browser, "password change");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
                 
@@ -201,7 +200,7 @@ namespace Launcher
                 var responseData = CustomResourceRequestHandler.ResponseData;
                 if (!ValidateJSON(responseData))
                 {
-                    return "Failed to get PlayToken, ResponseData returned an invalidate JSON";
+                    return "Failed to get PlayToken, ResponseData returned an invalid JSON";
                 }
 
                 var responseJObject = JsonConvert.DeserializeObject<JObject>(responseData);
@@ -210,9 +209,12 @@ namespace Launcher
                     return "Failed to get PlayToken, _result or resultMsg does not exit";
                 
                 var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
-                
+
                 if (string.IsNullOrEmpty(resultMsg))
-                    return "Failed to get PlayToken, resultMsg was empty";
+                {
+                    resultMsg = responseJObject["_result"]["resultCode"].Value<string>();
+                    return "Failed to get PlayToken, resultMsg was empty, resultCode was " + resultMsg;
+                }
                 
                 Cef.Shutdown();
                 return resultMsg;
@@ -221,18 +223,27 @@ namespace Launcher
 
         private async Task<string> CheckErrorMsg(IWebBrowser browser, string javascript, string step)
         {
-            // wait for any previous js scripts to finish, might needs a better implementation
-            // Callback might be better than time based, since users might have slower internet/computer
-            int delayCounter = 250;
-            do
-            {
+            int delayCounter = 1000;
+            do {
                 await Task.Delay(delayCounter);
-                await browser.EvaluateScriptAsync(javascript);
                 delayCounter += 50;
-            } while (CustomResourceRequestHandler.ResponseData == null && delayCounter < 1000);
+            } while (!browser.CanExecuteJavascriptInMainFrame && delayCounter < 10000);
+            
+            if (!browser.CanExecuteJavascriptInMainFrame)
+                return "CanExecuteJavascriptInMainFrame returned false at step (" + step + ") after waiting for ~"+ delayCounter + "(s)";
+            
+            // execute login/otp script
+            await browser.EvaluateScriptAsync(javascript);
+            
+            // wait for server response data
+            delayCounter = 1000;
+            do {
+                await Task.Delay(delayCounter);
+                delayCounter += 50;
+            } while (CustomResourceRequestHandler.ResponseData == null && delayCounter < 10000);
             
             if (string.IsNullOrEmpty(CustomResourceRequestHandler.ResponseData))
-                return "Failed to get a reply at step (" + step + ") from Pearl Abyss after waiting for 9000(ms)";
+                return "Failed to get a server reply at step (" + step + ") from Pearl Abyss after waiting for ~"+ delayCounter + "(s)";
 
             // Check resultMsg
             var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
@@ -247,14 +258,14 @@ namespace Launcher
             // No error found, returning null
             return null;
         }
-        private async Task<string> AdditionalErrorsCheck(IWebBrowser browser)
+        private async Task<string> AdditionalErrorsCheck(IWebBrowser browser, string step)
         {
             // The following script checks for maintenance (.box_error) and
-            // password change notification (.box_white)
+            // password change notification (.container.error.closetime)
             var additionalErrorsCheckScript = @"
                     (function(){
                         var query = document.querySelector('.box_error');
-                        var query2 = document.querySelector('.box_white');
+                        var query2 = document.querySelector('.container.error.closetime');
                         var result = null;
                         if(query != null)
                             result = query.innerText;
@@ -262,9 +273,17 @@ namespace Launcher
                             result = query2.innerText;
                         return result; 
                     })()";
-
-            string errorMsg = null;
             
+            int delayCounter = 1000;
+            do {
+                await Task.Delay(delayCounter);
+                delayCounter += 50;
+            } while (!browser.CanExecuteJavascriptInMainFrame && delayCounter < 10000);
+            
+            if (!browser.CanExecuteJavascriptInMainFrame)
+                return "CanExecuteJavascriptInMainFrame returned false at step (" + step + ") after waiting for ~"+ delayCounter + "(s)";
+            
+            string errorMsg = null;
             await browser.EvaluateScriptAsync(additionalErrorsCheckScript).ContinueWith(tsk =>
             {
                 if (tsk.Result.Success && tsk.Result.Result != null)
@@ -274,10 +293,9 @@ namespace Launcher
             });
             if (!string.IsNullOrEmpty(errorMsg))
                 return errorMsg;
-            else
-                return null;
+            
+            return null;
         }
-        
         private Task LoadPageAsync(IWebBrowser browser, string address = null)
         {
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -288,14 +306,9 @@ namespace Launcher
                 // Wait for while page to finish loading not just the first frame
                 if (!args.IsLoading)
                 {
-                    if (!browser.CanExecuteJavascriptInMainFrame)
-                        browser.Reload();
-                    else
-                    {
-                        browser.LoadingStateChanged -= handler;
-                        // Important that the continuation runs async using TaskCreationOptions.RunContinuationsAsynchronously
-                        tcs.TrySetResult(true);
-                    }
+                    browser.LoadingStateChanged -= handler;
+                    // Important that the continuation runs async using TaskCreationOptions.RunContinuationsAsynchronously
+                    tcs.TrySetResult(true);
                 }
             };
 
