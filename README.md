@@ -69,4 +69,6 @@ The launcher will fetch a handshake from PA (https://launcher.naeu.playblackdese
 
 *I get an error message/launcher doesn't work at all!*
 
-Make sure [.NET Framework 4.7](https://www.microsoft.com/en-us/download/details.aspx?id=55170) is installed or create an issue [here](https://github.com/jsoctocat/BDO-Launcher/issues), please describe the issue in as much detail as possible and/or paste/screenshot the error(s).
+Make sure [.NET Framework 4.7](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net47) and [MSVC runtime libraries](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) are installed.
+
+If you are facing an issue, feel free to create an issue [here](https://github.com/jsoctocat/BDO-Launcher/issues), please describe the issue in as much detail as possible and/or paste/screenshot the error(s).
