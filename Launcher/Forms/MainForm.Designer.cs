@@ -1,4 +1,4 @@
-﻿namespace Launcher
+﻿namespace Launcher.Forms
 {
     partial class MainForm
     {
@@ -46,7 +46,7 @@
             this.LoginAutomaticallyCheckBox = new System.Windows.Forms.CheckBox();
             this.launcherUpdateCheckBox = new System.Windows.Forms.CheckBox();
             this.gameUpdateCheckBox = new System.Windows.Forms.CheckBox();
-            this.StartGameButton = new System.Windows.Forms.Button();
+            this.btn_startGame = new System.Windows.Forms.Button();
             this.GameDirectoryPathLinkLabel = new System.Windows.Forms.LinkLabel();
             this.GithubLinkLabel = new System.Windows.Forms.LinkLabel();
             this.LoginGroupBox.SuspendLayout();
@@ -70,8 +70,8 @@
             this.LoginGroupBox.Controls.Add(this.LoginAutomaticallyCheckBox);
             this.LoginGroupBox.Controls.Add(this.launcherUpdateCheckBox);
             this.LoginGroupBox.Controls.Add(this.gameUpdateCheckBox);
-            this.LoginGroupBox.Controls.Add(this.StartGameButton);
-            this.LoginGroupBox.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.LoginGroupBox.Controls.Add(this.btn_startGame);
+            this.LoginGroupBox.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LoginGroupBox.Location = new System.Drawing.Point(12, 12);
             this.LoginGroupBox.Name = "LoginGroupBox";
             this.LoginGroupBox.Size = new System.Drawing.Size(337, 219);
@@ -115,7 +115,7 @@
             // UsernameLabel
             // 
             this.UsernameLabel.AutoSize = true;
-            this.UsernameLabel.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.UsernameLabel.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.UsernameLabel.Location = new System.Drawing.Point(16, 24);
             this.UsernameLabel.Name = "UsernameLabel";
             this.UsernameLabel.Size = new System.Drawing.Size(58, 13);
@@ -125,7 +125,7 @@
             // PasswordLabel
             // 
             this.PasswordLabel.AutoSize = true;
-            this.PasswordLabel.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.PasswordLabel.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.PasswordLabel.Location = new System.Drawing.Point(16, 52);
             this.PasswordLabel.Name = "PasswordLabel";
             this.PasswordLabel.Size = new System.Drawing.Size(56, 13);
@@ -168,9 +168,9 @@
             // 
             // RegionComboBox
             // 
-            this.RegionComboBox.AutoCompleteCustomSource.AddRange(new string[] {"NA", "EU"});
+            this.RegionComboBox.AutoCompleteCustomSource.AddRange(new string[] { "NA", "EU" });
             this.RegionComboBox.FormattingEnabled = true;
-            this.RegionComboBox.Items.AddRange(new object[] {"NA", "EU"});
+            this.RegionComboBox.Items.AddRange(new object[] { "NA", "EU" });
             this.RegionComboBox.Location = new System.Drawing.Point(247, 77);
             this.RegionComboBox.MaxDropDownItems = 2;
             this.RegionComboBox.Name = "RegionComboBox";
@@ -230,15 +230,15 @@
             this.gameUpdateCheckBox.UseVisualStyleBackColor = true;
             this.gameUpdateCheckBox.CheckedChanged += new System.EventHandler(this.gameUpdateCheckBox_CheckedChanged);
             // 
-            // StartGameButton
+            // btn_startGame
             // 
-            this.StartGameButton.Location = new System.Drawing.Point(163, 190);
-            this.StartGameButton.Name = "StartGameButton";
-            this.StartGameButton.Size = new System.Drawing.Size(155, 23);
-            this.StartGameButton.TabIndex = 11;
-            this.StartGameButton.Text = "Start Game";
-            this.StartGameButton.UseVisualStyleBackColor = true;
-            this.StartGameButton.Click += new System.EventHandler(this.StartGameButton_Click);
+            this.btn_startGame.Location = new System.Drawing.Point(163, 189);
+            this.btn_startGame.Name = "btn_startGame";
+            this.btn_startGame.Size = new System.Drawing.Size(155, 23);
+            this.btn_startGame.TabIndex = 11;
+            this.btn_startGame.Text = "Start Game";
+            this.btn_startGame.UseVisualStyleBackColor = true;
+            this.btn_startGame.Click += new System.EventHandler(this.StartGameButton_Click);
             // 
             // GameDirectoryPathLinkLabel
             // 
@@ -264,20 +264,19 @@
             // 
             // MainForm
             // 
-            this.AcceptButton = this.StartGameButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(364, 256);
             this.Controls.Add(this.GameDirectoryPathLinkLabel);
             this.Controls.Add(this.GithubLinkLabel);
             this.Controls.Add(this.LoginGroupBox);
-            this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Black Desert Launcher";
+            this.Text = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.LoginGroupBox.ResumeLayout(false);
@@ -285,8 +284,6 @@
             this.ResumeLayout(false);
             this.PerformLayout();
         }
-
-        private System.Windows.Forms.CheckBox adminCheckBox;
 
         #endregion
 
@@ -306,7 +303,8 @@
         private System.Windows.Forms.CheckBox LoginAutomaticallyCheckBox;
         private System.Windows.Forms.CheckBox launcherUpdateCheckBox;
         private System.Windows.Forms.CheckBox gameUpdateCheckBox;
-        private System.Windows.Forms.Button StartGameButton;
+        private System.Windows.Forms.Button btn_startGame;
+        private System.Windows.Forms.CheckBox adminCheckBox;
         private System.Windows.Forms.LinkLabel GithubLinkLabel;
         private System.Windows.Forms.LinkLabel GameDirectoryPathLinkLabel;
     }

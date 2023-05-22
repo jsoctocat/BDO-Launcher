@@ -1,6 +1,6 @@
 using System;
 
-namespace Launcher
+namespace Launcher.Source
 {
     //https://stackoverflow.com/questions/641361/base32-decoding
     //by Shane

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using Timer = System.Timers.Timer;
 
-namespace Launcher
+namespace Launcher.Source
 {
     public class Otp
     {

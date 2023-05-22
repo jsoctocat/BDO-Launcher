@@ -1,23 +1,28 @@
 ﻿using System;
-using System.Drawing;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.IO;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Launcher.Source;
 
-namespace Launcher
+namespace Launcher.Forms
 {
+    
     public partial class MainForm : Form
     {
         private Configuration _configuration;
         private Otp _otp;
-        private const string _version = "1.1.4";
+        private const string Version = "1.1.5";
+        private const string Title = "Custom Black Desert Launcher (" + Version + ")";
         
         public MainForm()
         {
             InitializeComponent();
+            Text = Title;
             _otp = new Otp();
         }
 
@@ -43,7 +48,7 @@ namespace Launcher
                         var resultContent = await result.Content.ReadAsStringAsync();
 
                         // Check for launcher update
-                        if (_version != resultContent)
+                        if (Version != resultContent)
                         {
                             if (MessageBox.Show(
                                 "New version is available for this launcher, would you like to update?",
@@ -161,7 +166,7 @@ namespace Launcher
 
             ConfigurationManager.Save(_configuration);
         }
-
+        
         private void OtpCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             // Do not allow edit OTP if Otp is enabled
@@ -269,14 +274,17 @@ namespace Launcher
         
         private async void GameStart()
         {
-            StartGameButton.Enabled = false;
-
+            btn_startGame.Enabled = false;
+            
             if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
                 OneTimePasswordAsync();
             else if (await StartGameAsync())
+            {
                 Close();
+                Environment.Exit(0);
+            }
             else
-                StartGameButton.Enabled = true;
+                btn_startGame.Enabled = true;
         }
 
         private void GameDirectoryPathLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -373,7 +381,7 @@ namespace Launcher
         
             async void OkButton_Click(object sender, EventArgs e)
             {
-                if (string.IsNullOrEmpty(otpTextBox.Text))
+                if (otpTextBox.Text.Length != 6 || !otpTextBox.Text.All(char.IsDigit))
                 {
                     MessageBox.Show("Please enter a valid OTP.",
                         "Error",
@@ -383,23 +391,27 @@ namespace Launcher
                 }
                 
                 _otp.OneTimePassword = int.Parse(otpTextBox.Text);
+                loginButton.Enabled = false;
                 
                 if (await StartGameAsync())
                 {
                     otpInputBox.Close();
                     Close();
+                    Environment.Exit(0);
                 }
                 else
-                    StartGameButton.Enabled = true;
+                {
+                    loginButton.Enabled = false;
+                }
             }
             loginButton.Click += OkButton_Click;
-        
+
             void Exit(object sender, FormClosingEventArgs e)
             {
-                StartGameButton.Enabled = true;
+                btn_startGame.Enabled = true;
             }
             otpInputBox.FormClosing += Exit;
-        
+
             void TextBox_KeyPress(object sender, KeyPressEventArgs e)
             {
                 if (e.KeyChar == Convert.ToChar(Keys.Return))
@@ -441,7 +453,7 @@ namespace Launcher
             string macAddress = null;
             
             if (MacAddressCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
-                macAddress = "1";
+                macAddress = "?";
             else if (MacAddressCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = MacAddressTextBox.Text;
             
@@ -471,6 +483,7 @@ namespace Launcher
                         == DialogResult.OK)
                     {
                         Close();
+                        Environment.Exit(0);
                     }
                 }
                 else if (MessageBox.Show($"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
@@ -479,7 +492,7 @@ namespace Launcher
                         MessageBoxIcon.Error)
                     == DialogResult.OK)
                 {
-                    Close();
+                    return false;
                 }
             }
             

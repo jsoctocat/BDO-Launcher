@@ -4,11 +4,11 @@ using System.Net.NetworkInformation;
 using System.Security;
 using System.Threading.Tasks;
 using CefSharp;
-using CefSharp.OffScreen;
+using Launcher.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Launcher
+namespace Launcher.Source
 {
     // https://github.com/cefsharp/CefSharp/wiki/General-Usage#request-interception
     public class CustomResourceRequestHandler : CefSharp.Handler.ResourceRequestHandler
@@ -105,30 +105,15 @@ namespace Launcher
     {
         private const string LauncherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
         private const string AuthenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
-        public static string Region = null;
-        public static string MacAddress = null;
-
-        public AuthenticationServiceProvider()
-        {
-            CefSharpSettings.SubprocessExitIfParentProcessClosed = true;
-            var settings = new CefSettings()
-            {
-                UserAgent = "BLACKDESERT",
-                AcceptLanguageList = "en-US"
-            };
-            
-            // Only initialize Cef once, this is a framework limitation
-            if(!Cef.IsInitialized)
-                Cef.Initialize(settings,true, browserProcessHandler: null);
-        }
-        
+        public static string Region;
+        public static string MacAddress;
         public async Task<string> AuthenticateAsync(string username, string password, string region,
             int otp, string macAddress)
         {
             Region = region;
             string otpString = otp.ToString("D6");
 
-            if (macAddress == "1")
+            if (macAddress == "?")
             {
                 // will grab the current PC's mac address
                 MacAddress = 
@@ -147,78 +132,69 @@ namespace Launcher
             else if (!string.IsNullOrEmpty(macAddress))
                 MacAddress = macAddress; //or use a given mac address
 
-            var browserSettings = new BrowserSettings()
+            BrowserForm.StopLoading();
+            BrowserForm.BrowserInstance().LoadUrl(LauncherReturnUrl);
+            BrowserForm.BrowserFormInstance().Show();
+
+            await BrowserForm.BrowserInstance().WaitForInitialLoadAsync();
+            
+            string errorMsg = await AdditionalErrorsCheck(BrowserForm.BrowserInstance(), "maintenance");
+            if (!string.IsNullOrEmpty(errorMsg))
+                return errorMsg;
+            
+            var loginScript = $@"
+                document.querySelector('#_email').value = '{username}';
+                document.querySelector('#_password').value = '{password}';
+                document.querySelector('#isIpCheck').value = 'false';
+                document.querySelector('#btnLogin').click();";
+
+            errorMsg = await CheckErrorMsg(BrowserForm.BrowserInstance(), loginScript, "loginScript");
+            if (!string.IsNullOrEmpty(errorMsg))
+                return errorMsg;
+
+            if (otp != 0)
             {
-                WindowlessFrameRate = 1,
-                ImageLoading = CefState.Disabled,
-                JavascriptAccessClipboard = CefState.Disabled,
-                JavascriptCloseWindows = CefState.Disabled,
-                JavascriptDomPaste = CefState.Disabled
-            };
-            using (var browser = new ChromiumWebBrowser(LauncherReturnUrl, browserSettings))
-            {
-                browser.RequestHandler = new CustomRequestHandler();
-                string errorMsg = null;
-
-                await browser.WaitForInitialLoadAsync();
-                
-                errorMsg = await AdditionalErrorsCheck(browser, "maintenance");
+                var otpScript = $@"
+                document.querySelector('#otpInput1').value = '{otpString[0]}';
+                document.querySelector('#otpInput2').value = '{otpString[1]}';
+                document.querySelector('#otpInput3').value = '{otpString[2]}';
+                document.querySelector('#otpInput4').value = '{otpString[3]}'; 
+                document.querySelector('#otpInput5').value = '{otpString[4]}';
+                document.querySelector('#otpInput6').value = '{otpString[5]}';
+                document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
+            
+                errorMsg = await CheckErrorMsg(BrowserForm.BrowserInstance(), otpScript, "otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
-                
-                var loginScript = $@"
-                    document.querySelector('#_email').value = '{username}';
-                    document.querySelector('#_password').value = '{password}';
-                    document.querySelector('#btnLogin').click();";
-
-                errorMsg = await CheckErrorMsg(browser, loginScript, "loginScript");
-                if (!string.IsNullOrEmpty(errorMsg))
-                    return errorMsg;
-
-                if (otp != 0)
-                {
-                    var otpScript = $@"
-                    document.querySelector('#otpInput1').value = '{otpString[0]}';
-                    document.querySelector('#otpInput2').value = '{otpString[1]}';
-                    document.querySelector('#otpInput3').value = '{otpString[2]}';
-                    document.querySelector('#otpInput4').value = '{otpString[3]}'; 
-                    document.querySelector('#otpInput5').value = '{otpString[4]}';
-                    document.querySelector('#otpInput6').value = '{otpString[5]}';
-                    document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
-                
-                    errorMsg = await CheckErrorMsg(browser, otpScript, "otpScript");
-                    if (!string.IsNullOrEmpty(errorMsg))
-                        return errorMsg;
-                }
-
-                errorMsg = await AdditionalErrorsCheck(browser, "password change");
-                if (!string.IsNullOrEmpty(errorMsg))
-                    return errorMsg;
-                
-                await LoadPageAsync(browser, AuthenticationEndPoint);
-
-                var responseData = CustomResourceRequestHandler.ResponseData;
-                if (!ValidateJSON(responseData))
-                {
-                    return "Failed to get PlayToken, ResponseData returned an invalid JSON";
-                }
-
-                var responseJObject = JsonConvert.DeserializeObject<JObject>(responseData);
-                // https://stackoverflow.com/questions/28352072/what-does-question-mark-and-dot-operator-mean-in-c-sharp-6-0
-                if (responseJObject["_result"]?["resultMsg"] == null)
-                    return "Failed to get PlayToken, _result or resultMsg does not exit";
-                
-                var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
-
-                if (string.IsNullOrEmpty(resultMsg))
-                {
-                    resultMsg = responseJObject["_result"]["resultCode"].Value<string>();
-                    return "Failed to get PlayToken, resultMsg was empty, resultCode was " + resultMsg;
-                }
-                
-                Cef.Shutdown();
-                return resultMsg;
             }
+
+            errorMsg = await AdditionalErrorsCheck(BrowserForm.BrowserInstance(), "password change");
+            if (!string.IsNullOrEmpty(errorMsg))
+                return errorMsg;
+            
+            await LoadPageAsync(BrowserForm.BrowserInstance(), AuthenticationEndPoint);
+
+            var responseData = CustomResourceRequestHandler.ResponseData;
+            if (!ValidateJson(responseData))
+            {
+                return "Failed to get PlayToken, ResponseData returned an invalid JSON";
+            }
+
+            var responseJObject = JsonConvert.DeserializeObject<JObject>(responseData);
+            // https://stackoverflow.com/questions/28352072/what-does-question-mark-and-dot-operator-mean-in-c-sharp-6-0
+            if (responseJObject["_result"]?["resultMsg"] == null)
+                return "Failed to get PlayToken, _result or resultMsg does not exit";
+            
+            var resultMsg = responseJObject["_result"]["resultMsg"].Value<string>();
+
+            if (string.IsNullOrEmpty(resultMsg))
+            {
+                resultMsg = responseJObject["_result"]["resultCode"].Value<string>();
+                return "Failed to get PlayToken, resultMsg was empty, resultCode was " + resultMsg;
+            }
+            
+            Cef.Shutdown();
+            return resultMsg;
         }
 
         private async Task<string> CheckErrorMsg(IWebBrowser browser, string javascript, string step)
@@ -248,9 +224,9 @@ namespace Launcher
             // Check resultMsg
             var responseJObject = JsonConvert.DeserializeObject<JObject>(CustomResourceRequestHandler.ResponseData);
             CustomResourceRequestHandler.ResponseData = null;
-            if (responseJObject.ContainsKey("resultMsg"))
+            if (responseJObject.TryGetValue("resultMsg", out var value))
             {
-                var errorMsg = responseJObject["resultMsg"].Value<string>();
+                var errorMsg = value.Value<string>();
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
             }
@@ -321,7 +297,7 @@ namespace Launcher
             return tcs.Task;
         }
         
-        private bool ValidateJSON(string testString)
+        private bool ValidateJson(string testString)
         {
             try
             {

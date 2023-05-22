@@ -1,148 +1,82 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 
-namespace Launcher
+namespace Launcher.Source
 {
 
     public class Configuration
     {
-        private string _username;
-        private byte[] _encryptedPassword;
-        private bool _otp;
-        private byte[] _encryptedOtp;
-        private bool _pcRegistration;
-        private string _macAddress;
-        private int _regionComboBox;
-        private bool _gamemode32bit;
-        private bool _rememberData;
-        private bool _loginAutomatically;
-        private bool _launcherUpdate;
-        private bool _gameUpdate;
-        private bool _runAsAdmin;
-        private string _gameDirectoryPath;
-        
-        public string Username
-        {
-            get => _username;
-            set => _username = value;
-        }
-        public byte[] EncryptedPassword
-        {
-            get => _encryptedPassword;
-            set => _encryptedPassword = value;
-        }
-        public bool Otp
-        {
-            get => _otp;
-            set => _otp = value;
-        }
-        public byte[] EncryptedOtp
-        {
-            get => _encryptedOtp;
-            set => _encryptedOtp = value;
-        }
-        public int RegionComboBox
-        {
-            get => _regionComboBox;
-            set => _regionComboBox = value;
-        }
-        public bool PcRegistration
-        {
-            get => _pcRegistration;
-            set => _pcRegistration = value;
-        }
-        public string MacAddress
-        {
-            get => _macAddress;
-            set => _macAddress = value;
-        }
-        public bool GameMode32Bit
-        {
-            get => _gamemode32bit;
-            set => _gamemode32bit = value;
-        }
-        public bool RememberData
-        {
-            get => _rememberData;
-            set => _rememberData = value;
-        }
-        public bool LoginAutomatically
-        {
-            get => _loginAutomatically;
-            set => _loginAutomatically = value;
-        }
-        public bool LauncherUpdate
-        {
-            get => _launcherUpdate;
-            set => _launcherUpdate = value;
-        }
-        public bool GameUpdate
-        {
-            get => _gameUpdate;
-            set => _gameUpdate = value;
-        }
-        public bool RunAsAdmin
-        {
-            get => _runAsAdmin;
-            set => _runAsAdmin = value;
-        }
-        public string GameDirectoryPath
-        {
-            get => _gameDirectoryPath;
-            set => _gameDirectoryPath = value;
-        }
+        public string Username { get; set; }
+
+        // this field needs to be public for the configuration to be saved properly
+        public byte[] EncryptedPassword { get; set; }
+
+        public bool Otp { get; set; }
+
+        // this field needs to be public for the configuration to be saved properly
+        public byte[] EncryptedOtp { get; set; }
+
+        public int RegionComboBox { get; set; }
+
+        public bool PcRegistration { get; set; }
+
+        public string MacAddress { get; set; }
+
+        public bool GameMode32Bit { get; set; }
+
+        public bool RememberData { get; set; }
+
+        public bool LoginAutomatically { get; set; }
+
+        public bool LauncherUpdate { get; set; }
+
+        public bool GameUpdate { get; set; }
+
+        public bool RunAsAdmin { get; set; }
+
+        public string GameDirectoryPath { get; set; }
 
         public Configuration()
         {
-            _username = null;
-            _encryptedPassword = null;
-            _otp = false;
-            _encryptedOtp = null;
-            _regionComboBox = 0;
-            _pcRegistration = false;
-            _macAddress = null;
-            _gamemode32bit = false;
-            _rememberData = false;
-            _loginAutomatically = false;
-            _launcherUpdate = false;
-            _gameUpdate = false;
-            _runAsAdmin = false;
-            _gameDirectoryPath = null;
+            Username = null;
+            EncryptedPassword = null;
+            Otp = false;
+            EncryptedOtp = null;
+            RegionComboBox = 0;
+            PcRegistration = false;
+            MacAddress = null;
+            GameMode32Bit = false;
+            RememberData = false;
+            LoginAutomatically = false;
+            LauncherUpdate = false;
+            GameUpdate = false;
+            RunAsAdmin = false;
+            GameDirectoryPath = null;
         }
 
         public string GetPassword()
         {
-            if (_encryptedPassword == null || !_encryptedPassword.Any())
+            if (EncryptedPassword == null || !EncryptedPassword.Any())
                 return null;
 
-            return CryptographyManager.Decrypt(_encryptedPassword);
+            return CryptographyManager.Decrypt(EncryptedPassword);
         }
 
         public void SetPassword(string password)
         {
-            if (string.IsNullOrEmpty(password))
-                _encryptedPassword = null;
-            else
-                _encryptedPassword = CryptographyManager.Encrypt(password);
+            EncryptedPassword = string.IsNullOrEmpty(password) ? null : CryptographyManager.Encrypt(password);
         }
 
         public string GetOtp()
         {
-            if (_encryptedOtp == null || !_encryptedOtp.Any())
+            if (EncryptedOtp == null || !EncryptedOtp.Any())
                 return null;
 
-            return CryptographyManager.Decrypt(_encryptedOtp);
+            return CryptographyManager.Decrypt(EncryptedOtp);
         }
 
         public void SetOtp(string password)
         {
-            if (string.IsNullOrEmpty(password))
-                _encryptedOtp = null;
-            else
-                _encryptedOtp = CryptographyManager.Encrypt(password);
+            EncryptedOtp = string.IsNullOrEmpty(password) ? null : CryptographyManager.Encrypt(password);
         }
     }
 }
