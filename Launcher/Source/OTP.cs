@@ -47,8 +47,7 @@ namespace Launcher.Source
         public byte[] HmacPart2 => Hmac.Skip(_offset).Take(4).ToArray();
         public byte[] HmacPart3 => Hmac.Skip(_offset + 4).ToArray();
 
-        private static long GetUnixTimestamp() =>
-            Convert.ToInt64(Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds));
+        private static long GetUnixTimestamp() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         private void CalculateOneTimePassword()
         {

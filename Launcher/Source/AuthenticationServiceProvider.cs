@@ -107,11 +107,12 @@ namespace Launcher.Source
         private const string AuthenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
         public static string Region;
         public static string MacAddress;
-        public async Task<string> AuthenticateAsync(string username, string password, string region,
-            int otp, string macAddress)
+        public async Task<string> AuthenticateAsync(string username, string password, 
+            string region, 
+            bool useOTP, bool useMasterOTP, string otp, 
+            string macAddress)
         {
             Region = region;
-            string otpString = otp.ToString("D6");
 
             if (macAddress == "?")
             {
@@ -152,8 +153,21 @@ namespace Launcher.Source
             if (!string.IsNullOrEmpty(errorMsg))
                 return errorMsg;
 
-            if (otp != 0)
+            if (useOTP)
             {
+                Otp _otp = new Otp();
+                string otpString = null;
+                // if OTP input is not null or empty then use it instead of master OTP
+                if (useMasterOTP)
+                {
+                    _otp.Password = Base32Converter.ToBytes(otp);
+                    otpString = _otp.OneTimePassword.ToString("D6");
+                }
+                else
+                {
+                    otpString = otp;
+                }
+                
                 var otpScript = $@"
                 document.querySelector('#otpInput1').value = '{otpString[0]}';
                 document.querySelector('#otpInput2').value = '{otpString[1]}';

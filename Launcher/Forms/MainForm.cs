@@ -15,15 +15,13 @@ namespace Launcher.Forms
     public partial class MainForm : Form
     {
         private Configuration _configuration;
-        private Otp _otp;
-        private const string Version = "1.1.5";
+        private const string Version = "1.1.6";
         private const string Title = "Custom Black Desert Launcher (" + Version + ")";
         
         public MainForm()
         {
             InitializeComponent();
             Text = Title;
-            _otp = new Otp();
         }
 
         private async Task CheckVersion(bool launcherUpdate, bool gameUpdate)
@@ -278,7 +276,7 @@ namespace Launcher.Forms
             
             if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
                 OneTimePasswordAsync();
-            else if (await StartGameAsync())
+            else if (await StartGameAsync(true, null))
             {
                 Close();
                 Environment.Exit(0);
@@ -363,13 +361,13 @@ namespace Launcher.Forms
                 Text = "OTP"
             };
         
-            var otpTextBox = new TextBox
+            var otpNotMasterTextBox = new TextBox
             {
                 Size = new Size(size.Width - 20, 25),
                 Location = new Point(10, 5)
             };
         
-            otpInputBox.Controls.Add(otpTextBox);
+            otpInputBox.Controls.Add(otpNotMasterTextBox);
         
             var loginButton = new Button
             {
@@ -381,7 +379,7 @@ namespace Launcher.Forms
         
             async void OkButton_Click(object sender, EventArgs e)
             {
-                if (otpTextBox.Text.Length != 6 || !otpTextBox.Text.All(char.IsDigit))
+                if (otpNotMasterTextBox.Text.Length != 6 || !otpNotMasterTextBox.Text.All(char.IsDigit))
                 {
                     MessageBox.Show("Please enter a valid OTP.",
                         "Error",
@@ -390,10 +388,9 @@ namespace Launcher.Forms
                     return;
                 }
                 
-                _otp.OneTimePassword = int.Parse(otpTextBox.Text);
                 loginButton.Enabled = false;
                 
-                if (await StartGameAsync())
+                if (await StartGameAsync(false, otpNotMasterTextBox.Text))
                 {
                     otpInputBox.Close();
                     Close();
@@ -419,12 +416,12 @@ namespace Launcher.Forms
                     loginButton.PerformClick();
                 }
             }
-            otpTextBox.KeyPress += TextBox_KeyPress;
+            otpNotMasterTextBox.KeyPress += TextBox_KeyPress;
         
             otpInputBox.Show(this);
         }
         
-        private async Task<bool> StartGameAsync()
+        private async Task<bool> StartGameAsync(bool useMasterOTP, string otpNotMaster)
         {
             var gameExecutableFilePath = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertEAC.exe");
 
@@ -449,28 +446,22 @@ namespace Launcher.Forms
             }
 
             var authenticationServiceProvider = new AuthenticationServiceProvider();
-            var otp = 0;
             string macAddress = null;
+            string otp = useMasterOTP ? OtpTextBox.Text : otpNotMaster;
             
             if (MacAddressCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = "?";
             else if (MacAddressCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = MacAddressTextBox.Text;
             
-            if (OtpCheckBox.Checked)
-            {
-                // Skip if not using master OTP
-                if(!string.IsNullOrEmpty(OtpTextBox.Text))
-                    _otp.Password = Base32Converter.ToBytes(OtpTextBox.Text);
-                
-                otp = _otp.OneTimePassword;
-            }
-            
             var playToken = await authenticationServiceProvider.AuthenticateAsync(
                 UsernameTextBox.Text, 
                 PasswordTextBox.Text, 
-                RegionComboBox.SelectedItem.ToString(), 
-                otp, macAddress);
+                RegionComboBox.SelectedItem.ToString(),
+                OtpCheckBox.Checked,
+                useMasterOTP,
+                otp,
+                macAddress);
             
             if (!playToken.StartsWith("0x"))
             {
@@ -510,7 +501,7 @@ namespace Launcher.Forms
                 {
                     // RunAsInvoker
                     process.StartInfo.FileName = "CMD";
-                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start \"\" \"" + gameExecutableFilePath + "\" " + playToken;
+                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start /affinity 5550000 \"\" \"" + gameExecutableFilePath + "\" " + playToken;
                 }
                 else
                 {
