@@ -135,7 +135,10 @@ namespace Launcher.Source
 
             BrowserForm.StopLoading();
             BrowserForm.BrowserInstance().LoadUrl(LauncherReturnUrl);
-            BrowserForm.BrowserFormInstance().Show();
+            BrowserForm.BrowserFormInstance().SetDesktopBounds(0,0,0,0);
+            BrowserForm.BrowserFormInstance().SendToBack();
+            BrowserForm.BrowserFormInstance().Visible = true;
+            BrowserForm.BrowserFormInstance().Visible = false;
 
             await BrowserForm.BrowserInstance().WaitForInitialLoadAsync();
             
