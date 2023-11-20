@@ -5,7 +5,7 @@
 
 ## Description
 <p align="center">
-  <img width="363" height="237" src="https://user-images.githubusercontent.com/42134925/112936280-5b105780-90da-11eb-868d-d9a193c62f57.png">
+  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/73fe4d0e-9256-44ce-80da-9a193535cf4f">
 </p>
 
 - A custom game launcher (NA/EU, non-steam) made to replace the official game launcher. 
@@ -26,6 +26,7 @@
 - Support for PC Registration Service
 - Automatic Login
 - Removed the need for Admin Privilege to start the game
+- CPU core affinity tweak (see [BDO Ultimate Performance Guide, "CPU Performance - Set Affinity"](https://docs.google.com/document/d/1cyLaDiPL_B6nOZw_qPE_wOGuoeRT-qddTjevTFoFBkg))
 - (OPTIONAL) To disable the automatic-login function, either edit the settings file (%AppData%\bdoscientist_Launcher\settings.json) or start the Launcher with the command-line argument "--disable-automatic-login"
 
 ## How to use the OTP feature (2 ways to login if you have OTP)
