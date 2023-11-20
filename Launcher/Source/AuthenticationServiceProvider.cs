@@ -110,7 +110,7 @@ namespace Launcher.Source
         public async Task<string> AuthenticateAsync(string username, string password, 
             string region, 
             bool useOTP, bool useMasterOTP, string otp, 
-            string macAddress)
+            string macAddress, bool hideBrowserForm)
         {
             Region = region;
 
@@ -135,10 +135,17 @@ namespace Launcher.Source
 
             BrowserForm.StopLoading();
             BrowserForm.BrowserInstance().LoadUrl(LauncherReturnUrl);
-            BrowserForm.BrowserFormInstance().SetDesktopBounds(0,0,0,0);
-            BrowserForm.BrowserFormInstance().SendToBack();
-            BrowserForm.BrowserFormInstance().Visible = true;
-            BrowserForm.BrowserFormInstance().Visible = false;
+            if (hideBrowserForm)
+            {
+                BrowserForm.BrowserFormInstance().SetDesktopBounds(0,0,0,0);
+                BrowserForm.BrowserFormInstance().SendToBack();
+                BrowserForm.BrowserFormInstance().Visible = true;
+                BrowserForm.BrowserFormInstance().Visible = false;
+            }
+            else
+            {
+                BrowserForm.BrowserFormInstance().Show();
+            }
 
             await BrowserForm.BrowserInstance().WaitForInitialLoadAsync();
             

@@ -20,6 +20,10 @@ namespace Launcher.Source
         public bool PcRegistration { get; set; }
 
         public string MacAddress { get; set; }
+        
+        public bool CoreAffinity { get; set; }
+        
+        public string AffinityBitmask { get; set; }
 
         public bool GameMode32Bit { get; set; }
 
@@ -32,6 +36,8 @@ namespace Launcher.Source
         public bool GameUpdate { get; set; }
 
         public bool RunAsAdmin { get; set; }
+        
+        public bool HideBrowserForm { get; set; }
 
         public string GameDirectoryPath { get; set; }
 
@@ -44,12 +50,15 @@ namespace Launcher.Source
             RegionComboBox = 0;
             PcRegistration = false;
             MacAddress = null;
+            CoreAffinity = false;
+            AffinityBitmask = null;
             GameMode32Bit = false;
             RememberData = false;
             LoginAutomatically = false;
             LauncherUpdate = false;
             GameUpdate = false;
             RunAsAdmin = false;
+            HideBrowserForm = false;
             GameDirectoryPath = null;
         }
 

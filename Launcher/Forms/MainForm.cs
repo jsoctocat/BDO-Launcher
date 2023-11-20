@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Launcher.Source;
+using Newtonsoft.Json.Linq;
 
 namespace Launcher.Forms
 {
@@ -15,7 +16,7 @@ namespace Launcher.Forms
     public partial class MainForm : Form
     {
         private Configuration _configuration;
-        private const string Version = "1.1.6";
+        private const string Version = "1.1.7";
         private const string Title = "Custom Black Desert Launcher (" + Version + ")";
         
         public MainForm()
@@ -27,42 +28,37 @@ namespace Launcher.Forms
         private async Task CheckVersion(bool launcherUpdate, bool gameUpdate)
         {
             Uri launcherVersionUrl = 
-                new Uri("https://gist.githubusercontent.com/jsoctocat/4aeb78c8b7d92aca96911afa393614d5/raw/version");
+                new Uri("https://api.github.com/repos/jsoctocat/BDO-Launcher/tags");
 
             Uri gameVersionUrl = new Uri("https://naeu-o-dn.playblackdesert.com/UploadData/client_version");
             
-            // Check version on load
+            // Check for launcher update
             if (launcherUpdate)
-            {            
-                using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
-                using (var client = new HttpClient(handler) { BaseAddress = launcherVersionUrl })
+            {
+                using (WebClient wc = new WebClient())
                 {
-                    using (var result = await client.GetAsync(launcherVersionUrl))
+                    wc.Headers.Add("user-agent", "BDO-Launcher");
+                    var resultString = wc.DownloadString("https://api.github.com/repos/jsoctocat/BDO-Launcher/tags");
+                    var json = JArray.Parse(resultString);
+                    var name = json[0]["name"];
+                    
+                    if (name != null && name.Value<string>() != Version)
                     {
-                        if (!result.IsSuccessStatusCode)
-                            return;
-                        
-                        // Grab latest version string from github
-                        var resultContent = await result.Content.ReadAsStringAsync();
-
-                        // Check for launcher update
-                        if (Version != resultContent)
-                        {
-                            if (MessageBox.Show(
+                        if (MessageBox.Show(
                                 "New version is available for this launcher, would you like to update?",
                                 "Custom Launcher Update Notice",
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Asterisk
                             ) == DialogResult.Yes)
-                            {
-                                Process.Start("https://github.com/jsoctocat/BDO-Launcher/releases");
-                                Close();
-                            }
+                        {
+                            Process.Start("https://github.com/jsoctocat/BDO-Launcher/releases");
+                            Close();
                         }
                     }
                 }
             }
 
+            // Check for game update
             if (gameUpdate)
             {
                 using (var handler = new HttpClientHandler { CookieContainer = new CookieContainer() })
@@ -123,21 +119,24 @@ namespace Launcher.Forms
 
             if (_configuration.RememberData)
             {
-                UsernameTextBox.Text = _configuration.Username;
-                PasswordTextBox.Text = _configuration.GetPassword();
+                usernameTextBox.Text = _configuration.Username;
+                passwordTextBox.Text = _configuration.GetPassword();
                 MacAddressTextBox.Text = _configuration.MacAddress;
+                affinityBitmaskTextBox.Text = _configuration.AffinityBitmask;
             }
 
-            OtpCheckBox.Checked = _configuration.Otp;
-            OtpTextBox.Text = _configuration.GetOtp();
-            RegionComboBox.SelectedIndex = _configuration.RegionComboBox;
-            MacAddressCheckBox.Checked = _configuration.PcRegistration;
-            GameMode32BitCheckBox.Checked = _configuration.GameMode32Bit;
-            RememberDataCheckBox.Checked = _configuration.RememberData;
-            LoginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
+            otpCheckBox.Checked = _configuration.Otp;
+            otpTextBox.Text = _configuration.GetOtp();
+            regionComboBox.SelectedIndex = _configuration.RegionComboBox;
+            pcRegCheckBox.Checked = _configuration.PcRegistration;
+            coreAffinityCheckBox.Checked = _configuration.CoreAffinity;
+            gameMode32BitCheckBox.Checked = _configuration.GameMode32Bit;
+            rememberDataCheckBox.Checked = _configuration.RememberData;
+            loginAutomaticallyCheckBox.Checked = _configuration.LoginAutomatically;
             launcherUpdateCheckBox.Checked = _configuration.LauncherUpdate;
             gameUpdateCheckBox.Checked = _configuration.GameUpdate;
             adminCheckBox.Checked = _configuration.RunAsAdmin;
+            hideBrowserFormCheckBox.Checked = _configuration.HideBrowserForm;
 
             // Check for new version on start up
             if (_configuration.LauncherUpdate || _configuration.GameUpdate)
@@ -153,14 +152,15 @@ namespace Launcher.Forms
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (RememberDataCheckBox.Checked)
+            if (rememberDataCheckBox.Checked)
             {
-                _configuration.Username = UsernameTextBox.Text;
-                _configuration.SetPassword(PasswordTextBox.Text);
+                _configuration.Username = usernameTextBox.Text;
+                _configuration.SetPassword(passwordTextBox.Text);
                 _configuration.MacAddress = MacAddressTextBox.Text;
+                _configuration.AffinityBitmask = affinityBitmaskTextBox.Text;
             }
             // Always save OTP
-            _configuration.SetOtp(OtpTextBox.Text);
+            _configuration.SetOtp(otpTextBox.Text);
 
             ConfigurationManager.Save(_configuration);
         }
@@ -168,16 +168,16 @@ namespace Launcher.Forms
         private void OtpCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             // Do not allow edit OTP if Otp is enabled
-            OtpTextBox.Enabled = !OtpCheckBox.Checked;
+            otpTextBox.Enabled = !otpCheckBox.Checked;
             
-            _configuration.Otp = OtpCheckBox.Checked;
+            _configuration.Otp = otpCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
 
         private void RegionComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _configuration.RegionComboBox = RegionComboBox.SelectedIndex;
+            _configuration.RegionComboBox = regionComboBox.SelectedIndex;
             ConfigurationManager.Save(_configuration);
             
             string[] region = { "NA", "EU" };
@@ -191,55 +191,70 @@ namespace Launcher.Forms
 
             if (!File.Exists(regionFilePath))
             {
-                File.WriteAllText(regionFilePath, RegionComboBox.SelectedItem.ToString());
+                File.WriteAllText(regionFilePath, regionComboBox.SelectedItem.ToString());
                 File.WriteAllText(Path.Combine(_configuration.GameDirectoryPath, "service.ini"),
-                    regionInfo[RegionComboBox.SelectedIndex]);
+                    regionInfo[regionComboBox.SelectedIndex]);
             }
             
             var currentRegion = File.ReadAllText(regionFilePath);
 
-            if (currentRegion == RegionComboBox.SelectedItem.ToString()) return;
+            if (currentRegion == regionComboBox.SelectedItem.ToString()) return;
                 
-            File.WriteAllText(regionFilePath, region[RegionComboBox.SelectedIndex]);
+            File.WriteAllText(regionFilePath, region[regionComboBox.SelectedIndex]);
             File.WriteAllText(Path.Combine(_configuration.GameDirectoryPath, "service.ini"),
-                regionInfo[RegionComboBox.SelectedIndex]);
+                regionInfo[regionComboBox.SelectedIndex]);
         }
         
         private void MacAddressCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             // Do not allow edit Mac Address if PC Registration is enabled
-            MacAddressTextBox.Enabled = !MacAddressCheckBox.Checked;
+            MacAddressTextBox.Enabled = !pcRegCheckBox.Checked;
             
-            _configuration.PcRegistration = MacAddressCheckBox.Checked;
+            _configuration.PcRegistration = pcRegCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
 
+        private void CoreAffinityCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            // Do not allow edit Affinity Bitmask if Core Affinity is enabled
+            affinityBitmaskTextBox.Enabled = !coreAffinityCheckBox.Checked;
+            
+            _configuration.CoreAffinity = coreAffinityCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
+        }
+
+        private void AffinityBitmaskTextBox_TextChanged(object sender, EventArgs e)
+        {
+            throw new System.NotImplementedException();
+        }
+
         private void GameModeCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            _configuration.GameMode32Bit = GameMode32BitCheckBox.Checked;
+            _configuration.GameMode32Bit = gameMode32BitCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
         
         private void RememberDataCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            _configuration.RememberData = RememberDataCheckBox.Checked;
+            _configuration.RememberData = rememberDataCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
 
         private void LoginAutomaticallyCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (LoginAutomaticallyCheckBox.Checked)
+            if (loginAutomaticallyCheckBox.Checked)
             {
-                RememberDataCheckBox.Checked = true;
-                RememberDataCheckBox.Enabled = false;
+                rememberDataCheckBox.Checked = true;
+                rememberDataCheckBox.Enabled = false;
             }
             else
-                RememberDataCheckBox.Enabled = true;
+                rememberDataCheckBox.Enabled = true;
 
-            _configuration.LoginAutomatically = LoginAutomaticallyCheckBox.Checked;
+            _configuration.LoginAutomatically = loginAutomaticallyCheckBox.Checked;
 
             ConfigurationManager.Save(_configuration);
         }
@@ -264,6 +279,13 @@ namespace Launcher.Forms
 
             ConfigurationManager.Save(_configuration);
         }
+
+        private void HideBrowserFormCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _configuration.HideBrowserForm = hideBrowserFormCheckBox.Checked;
+
+            ConfigurationManager.Save(_configuration);
+        }
         
         private void StartGameButton_Click(object sender, EventArgs e)
         {
@@ -272,9 +294,9 @@ namespace Launcher.Forms
         
         private async void GameStart()
         {
-            btn_startGame.Enabled = false;
+            startGameBtn.Enabled = false;
             
-            if (OtpCheckBox.Checked && string.IsNullOrEmpty(OtpTextBox.Text))
+            if (otpCheckBox.Checked && string.IsNullOrEmpty(otpTextBox.Text))
                 OneTimePasswordAsync();
             else if (await StartGameAsync(true, null))
             {
@@ -282,7 +304,7 @@ namespace Launcher.Forms
                 Environment.Exit(0);
             }
             else
-                btn_startGame.Enabled = true;
+                startGameBtn.Enabled = true;
         }
 
         private void GameDirectoryPathLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -405,7 +427,7 @@ namespace Launcher.Forms
 
             void Exit(object sender, FormClosingEventArgs e)
             {
-                btn_startGame.Enabled = true;
+                startGameBtn.Enabled = true;
             }
             otpInputBox.FormClosing += Exit;
 
@@ -435,7 +457,7 @@ namespace Launcher.Forms
                 return false;
             }
 
-            if (string.IsNullOrEmpty(UsernameTextBox.Text) || string.IsNullOrEmpty(PasswordTextBox.Text))
+            if (string.IsNullOrEmpty(usernameTextBox.Text) || string.IsNullOrEmpty(passwordTextBox.Text))
             {
                 MessageBox.Show("Please enter the valid credential(s).",
                     "Error",
@@ -447,21 +469,22 @@ namespace Launcher.Forms
 
             var authenticationServiceProvider = new AuthenticationServiceProvider();
             string macAddress = null;
-            string otp = useMasterOTP ? OtpTextBox.Text : otpNotMaster;
+            string otp = useMasterOTP ? otpTextBox.Text : otpNotMaster;
             
-            if (MacAddressCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
+            if (pcRegCheckBox.Checked && string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = "?";
-            else if (MacAddressCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
+            else if (pcRegCheckBox.Checked && !string.IsNullOrEmpty(MacAddressTextBox.Text))
                 macAddress = MacAddressTextBox.Text;
             
             var playToken = await authenticationServiceProvider.AuthenticateAsync(
-                UsernameTextBox.Text, 
-                PasswordTextBox.Text, 
-                RegionComboBox.SelectedItem.ToString(),
-                OtpCheckBox.Checked,
+                usernameTextBox.Text, 
+                passwordTextBox.Text, 
+                regionComboBox.SelectedItem.ToString(),
+                otpCheckBox.Checked,
                 useMasterOTP,
                 otp,
-                macAddress);
+                macAddress,
+                hideBrowserFormCheckBox.Checked);
             
             if (!playToken.StartsWith("0x"))
             {
@@ -487,8 +510,12 @@ namespace Launcher.Forms
                 }
             }
             
-            if (!GameMode32BitCheckBox.Checked)
+            if (!gameMode32BitCheckBox.Checked)
                 playToken += " -eac_launcher_settings Settings64.json";
+
+            string affinityBitmask = "";
+            if (coreAffinityCheckBox.Checked && !string.IsNullOrEmpty(affinityBitmaskTextBox.Text))
+                affinityBitmask = " /affinity " + affinityBitmaskTextBox.Text.Trim();
             
             using (var process = new Process())
             {
@@ -501,7 +528,7 @@ namespace Launcher.Forms
                 {
                     // RunAsInvoker
                     process.StartInfo.FileName = "CMD";
-                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start /affinity 5550000 \"\" \"" + gameExecutableFilePath + "\" " + playToken;
+                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start" + affinityBitmask + " \"\" \"" + gameExecutableFilePath + "\" " + playToken;
                 }
                 else
                 {
