@@ -16,7 +16,7 @@ namespace Launcher.Forms
     public partial class MainForm : Form
     {
         private Configuration _configuration;
-        private const string Version = "1.1.7";
+        private const string Version = "1.1.8";
         private const string Title = "Custom Black Desert Launcher (" + Version + ")";
         
         public MainForm()
@@ -445,11 +445,14 @@ namespace Launcher.Forms
         
         private async Task<bool> StartGameAsync(bool useMasterOTP, string otpNotMaster)
         {
-            var gameExecutableFilePath = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertEAC.exe");
+            var gameExecutableFilePath = gameMode32BitCheckBox.Checked ? 
+                Path.Combine("bin","BlackDesert32.exe") : Path.Combine("bin64", "BlackDesert64.exe");
+            
+            var launchPath = Path.Combine(_configuration.GameDirectoryPath, gameExecutableFilePath);
 
-            if (!File.Exists(gameExecutableFilePath))
+            if (!File.Exists(launchPath))
             {
-                MessageBox.Show($"Failed to find `BlackDesertEAC.exe`.\nUsed path: `{gameExecutableFilePath}`.\nPlease set the correct path to the game.",
+                MessageBox.Show($"Failed to find `{launchPath}`.\nUsed path: `{_configuration.GameDirectoryPath}`.\nPlease set the correct path to the game's base directory where the bin/bin64 folder reside.",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -509,9 +512,6 @@ namespace Launcher.Forms
                     return false;
                 }
             }
-            
-            if (!gameMode32BitCheckBox.Checked)
-                playToken += " -eac_launcher_settings Settings64.json";
 
             string affinityBitmask = "";
             if (coreAffinityCheckBox.Checked && !string.IsNullOrEmpty(affinityBitmaskTextBox.Text))
@@ -522,19 +522,19 @@ namespace Launcher.Forms
                 process.StartInfo.UseShellExecute = true;
                 process.StartInfo.RedirectStandardOutput = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = Path.GetDirectoryName(gameExecutableFilePath);
+                process.StartInfo.WorkingDirectory = Path.GetDirectoryName(launchPath);
                 
                 if (!adminCheckBox.Checked)
                 {
                     // RunAsInvoker
                     process.StartInfo.FileName = "CMD";
-                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start" + affinityBitmask + " \"\" \"" + gameExecutableFilePath + "\" " + playToken;
+                    process.StartInfo.Arguments = "/min /C set __COMPAT_LAYER=RUNASINVOKER && start" + affinityBitmask + " \"\" \"" + launchPath + "\" " + playToken;
                 }
                 else
                 {
                     // RunAsAdmin
                     process.StartInfo.Verb = "runas";
-                    process.StartInfo.FileName = gameExecutableFilePath;
+                    process.StartInfo.FileName = launchPath;
                     process.StartInfo.Arguments = playToken;
                 }
                 

@@ -65,7 +65,7 @@ Yes, the official launcher is still required for the weekly game update, this ha
 
 *So how does it work exactly?*
 
-The launcher will fetch a handshake from PA (https://launcher.naeu.playblackdesert.com/Login/Index) then sends the necessary credentials (email and password) to PA's authentication server-endpoint (https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess), in return, gets an authentication token. This authentication token is then sent to PA's second authentication server-endpoint (https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount) which generates a play token. The launcher then starts the game by creating a process (BlackDesertEAC.exe) with the play token as a startup command-line argument.
+The launcher will fetch a handshake from PA (https://launcher.naeu.playblackdesert.com/Login/Index) then sends the necessary credentials (email and password) to PA's authentication server-endpoint (https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess), in return, gets an authentication token. This authentication token is then sent to PA's second authentication server-endpoint (https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount) which generates a play token. The launcher then starts the game by creating a process (BlackDesert64.exe/BlackDesert32.exe) with the play token as a startup command-line argument.
 
 *I get an error message/launcher doesn't work at all!*
 
