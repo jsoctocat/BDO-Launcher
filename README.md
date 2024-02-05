@@ -1,7 +1,7 @@
 # Custom Online Game Launcher
 ## Credits
 - The generate of One-Time Password (OTP) implementation is based on https://github.com/LTruijens/google-auth-csharp
-- This Launcher is Based on/Forked from https://github.com/bdoscientist/Launcher
+- This Launcher is Based on https://github.com/bdoscientist/Launcher
 
 ## Description
 <p align="center">
@@ -9,13 +9,17 @@
 </p>
 
 - A custom game launcher (NA/EU, non-steam) made to replace the official game launcher. 
+- Cross platform support (Windows and Linux, macOS not tested)
 - Supports automatic login even if the account has set up for OTP system (The password and OTP are both stored locally and encrypted)
-- Enjoy the 5% drop rate buff without the annoyance of having to input OTP every single time on log in, having to painfully click the Confirm button because you can't just copy/paste and hit the enter key
+- Enjoy the 5% drop rate buff without the annoyance of having to input OTP every single time on log in
 
 ## Build Manually
 1. Visual Studio
-2. Grab Newtonsoft.Json version 13.0.2 Package from NuGet
-3. Grab CefSharp.OffScreen version 112.2.70 Package from NuGet
+2. Grab .NET 8.0 SDK
+2. Grab Newtonsoft.Json version 13.0.3 Package from NuGet
+3. Grab Avalonia version 11.0.6 Package from NuGet
+3. Grab CommunityToolkit.Mvvm version 8.2.2 Package from NuGet
+3. Grab Microsoft.Playwright version 1.41.2 Package from NuGet
 4. Choose Build Solution from the Build menu. The Output window shows the results of the build process.
 
 ## Features
@@ -23,8 +27,7 @@
 - Support for one-time password (OTP)
 - Credential Saving (username, password, OTP)
 - Password and OTP are encrypted with PBKDF2 (see [rfc2898](https://tools.ietf.org/html/rfc2898) OR [rfc2898(wikipedia)](https://en.wikipedia.org/wiki/PBKDF2))
-- Support for PC Registration Service
-- Automatic Login
+- ~~Support for PC Registration Service~~ Pearl Abyss removed the Register PC function on [January 31, 2024](https://www.naeu.playblackdesert.com/en-US/News/Detail?groupContentNo=6545&countryType=en-US#Web). It is enabled by default, so the transmission of the MAC address is now a mandatory feature.
 - Removed the need for Admin Privilege to start the game
 - CPU core affinity tweak (see [BDO Ultimate Performance Guide, "CPU Performance - Set Affinity"](https://docs.google.com/document/d/1cyLaDiPL_B6nOZw_qPE_wOGuoeRT-qddTjevTFoFBkg))
 - (OPTIONAL) To disable the automatic-login function, either edit the settings file (%AppData%\bdoscientist_Launcher\settings.json) or start the Launcher with the command-line argument "--disable-automatic-login"
@@ -45,31 +48,37 @@
 2. The launcher will prompt the user to enter a one-time password
 3. Hit the ENTER key or click Login
 
-## How to use PC Registration Service
-#### Option A: Automatic
-1. Check the PC Registration checkbox and leave the text field empty
+## I encountered a captcha. What should I do now?
+1. Do not close the error pop up
+2. Check if debug mode is on, if off then turn on debug mode then restart the launcher
+3. If debug mode is on, complete the captcha from the browser pop up
+4. Close the error pop up, everything else should be automatic
 
-#### Option B: Manual
-1. Put in the MAC address you would like to use in the text field next to PC Registration checkbox
-2. An example: 00-10-5A-44-12-B5
-3. Check the PC Registration checkbox
+## Linux Setup
+1. By default the following launch options are used to start the game on Linux, if your paths are different you have to edit the Launch Option
+2. STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/ nohup ~/.local/share/Steam/compatibilitytools.d/GE-Proton8-30/proton run
+2. If you need any additional launch options put them before nohup such as ../tdata/ DXVK_HUD=1 DRI_PRIME=1 MESA_VK_DEVICE_SELECT=1 nohup
+3. CPU core affinity tweak is not supported on Linux
+- NOTE: "nohup" must be included or the game will close with the launcher at start up, the above paths are default steam install locations, and is using GE-Proton8-30, **possible failure at launch if directories have white spaces**
 
 ## FAQ
-*Why was this created?*
+### *Why was this created?*
 
 Since the official launcher takes a very long time to start and sometimes won't load at all. This custom launcher solves that problem.
 This launcher also completely removes the need of having to manually input password or OTP every single time when trying to login.
 
-*Do I still need the official launcher?*
+### *Do I still need the official launcher?*
 
-Yes, the official launcher is still required for the weekly game update, this has to be done manually via the official launcher.
+Yes, the official launcher is still required for the weekly game update, this has to be done manually via the official launcher. However, you do not need to login.
 
-*So how does it work exactly?*
+### *So how does it work exactly?*
 
 The launcher will fetch a handshake from PA (https://launcher.naeu.playblackdesert.com/Login/Index) then sends the necessary credentials (email and password) to PA's authentication server-endpoint (https://account.pearlabyss.com/en-US/Launcher/Login/LoginProcess), in return, gets an authentication token. This authentication token is then sent to PA's second authentication server-endpoint (https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount) which generates a play token. The launcher then starts the game by creating a process (BlackDesert64.exe/BlackDesert32.exe) with the play token as a startup command-line argument.
 
-*I get an error message/launcher doesn't work at all!*
+### *I get an error message/launcher doesn't work at all!*
 
-Make sure [.NET Framework 4.7](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net47) and [MSVC runtime libraries](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) are installed.
+If you are using version older than 2.0.0. Make sure [.NET Framework 4.7](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net47) and [MSVC runtime libraries](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) are installed.
 
-If you are facing an issue, feel free to create an issue [here](https://github.com/jsoctocat/BDO-Launcher/issues), please describe the issue in as much detail as possible and/or paste/screenshot the error(s).
+If you are on version 2.0.0 or newer. Make sure [.NET Runtime 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) is installed.
+
+## If you are facing an issue, feel free to create an issue [here](https://github.com/jsoctocat/BDO-Launcher/issues), please describe the issue in as much detail as possible and/or paste/screenshot the error(s).

@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Launcher.Source
 {
-
     public class Configuration
     {
         public string Username { get; set; }
@@ -17,9 +17,9 @@ namespace Launcher.Source
 
         public int RegionComboBox { get; set; }
 
-        public bool PcRegistration { get; set; }
+        public bool LaunchOption { get; set; }
 
-        public string MacAddress { get; set; }
+        public string LaunchOptions { get; set; }
         
         public bool CoreAffinity { get; set; }
         
@@ -37,29 +37,29 @@ namespace Launcher.Source
 
         public bool RunAsAdmin { get; set; }
         
-        public bool HideBrowserForm { get; set; }
+        public bool DebugMode { get; set; }
 
         public string GameDirectoryPath { get; set; }
 
         public Configuration()
         {
-            Username = null;
-            EncryptedPassword = null;
+            Username = String.Empty;
+            EncryptedPassword = Array.Empty<byte>();
             Otp = false;
-            EncryptedOtp = null;
+            EncryptedOtp = Array.Empty<byte>();
             RegionComboBox = 0;
-            PcRegistration = false;
-            MacAddress = null;
+            LaunchOption = false;
+            LaunchOptions = String.Empty;
             CoreAffinity = false;
-            AffinityBitmask = null;
+            AffinityBitmask = String.Empty;
             GameMode32Bit = false;
             RememberData = false;
             LoginAutomatically = false;
             LauncherUpdate = false;
             GameUpdate = false;
             RunAsAdmin = false;
-            HideBrowserForm = false;
-            GameDirectoryPath = null;
+            DebugMode = false;
+            GameDirectoryPath = String.Empty;
         }
 
         public string GetPassword()
@@ -83,9 +83,9 @@ namespace Launcher.Source
             return CryptographyManager.Decrypt(EncryptedOtp);
         }
 
-        public void SetOtp(string password)
+        public void SetOtp(string otp)
         {
-            EncryptedOtp = string.IsNullOrEmpty(password) ? null : CryptographyManager.Encrypt(password);
+            EncryptedOtp = string.IsNullOrEmpty(otp) ? null : CryptographyManager.Encrypt(otp);
         }
     }
 }

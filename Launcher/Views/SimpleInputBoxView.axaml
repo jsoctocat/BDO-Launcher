@@ -1,0 +1,24 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Launcher.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="90"
+             x:Class="Launcher.Views.SimpleInputBoxView"
+             x:DataType="viewModels:MainViewModel"
+             Padding="10">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <TextBox Grid.Row="0" Name="OTP" HorizontalContentAlignment="Center" Text="{Binding OtpNotMasterTextBox}"></TextBox>
+        </Grid>
+        <!--Buttons-->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Grid.Row="2" HorizontalAlignment="Center">
+            <Button Name="OkButton" Width="180" HorizontalContentAlignment="Center" IsDefault="True" Command="{Binding OtpLoginBtn}" >Login</Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

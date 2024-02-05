@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Launcher.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="470" d:DesignHeight="450"
+             x:Class="Launcher.Views.MainView"
+             x:DataType="viewModels:MainViewModel">
+    
+    <Grid Name="MainGrid" RowDefinitions="*, 0.125*">
+        <!-- Main area -->
+        <Grid>
+            <Grid Grid.Column="0" RowDefinitions="*, Auto" Margin="15,10,15,5">
+                <Grid Grid.Row="0" Margin="10, 0" RowDefinitions="4*,4*,4*,4*,4*,4*,4*,4*">
+                    
+                    <Grid.Styles>
+                        <Style Selector="Label">
+                            <Setter Property="FontSize" Value="12"></Setter>
+                            <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+                            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        </Style>
+                        <Style Selector="TextBox">
+                            <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+                            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        </Style>
+                    </Grid.Styles>
+                    
+                    <Label Grid.Row="0">Username</Label>
+                    <Label Grid.Row="1">Password</Label>
+                    <CheckBox Grid.Row="2" IsChecked="{Binding OtpCheckBox}">OTP</CheckBox>
+                    <CheckBox Grid.Row="3" IsChecked="{Binding LaunchOptCheckBox}">Launch Options</CheckBox>
+                    <CheckBox Grid.Row="4" IsChecked="{Binding CoreAffinityCheckBox}">Core Affinity</CheckBox>
+                    <CheckBox Grid.Row="5" IsChecked="{Binding GameMode32BitCheckBox}">32 BIT</CheckBox>
+                    <CheckBox Grid.Row="6" IsChecked="{Binding LauncherUpdateCheckBox}">Check Launcher Update</CheckBox>
+                    <CheckBox Grid.Row="7" IsChecked="{Binding AdminCheckBox}">Launch As Admin</CheckBox>
+                    
+                    <TextBox Margin="85,0,0,0" Width="330" Grid.Row="0" 
+                             Text="{Binding UsernameTextBox}"></TextBox>
+                    <TextBox PasswordChar="*" Margin="85,0,0,0" Width="330" Grid.Row="1" 
+                             Text="{Binding PasswordTextBox}"></TextBox>
+                    <!-- Do not allow edit OTP if Otp is enabled -->
+                    <TextBox PasswordChar="*" Margin="85,0,0,0" Width="200" Grid.Row="2" 
+                             Text="{Binding OtpTextBox}" IsEnabled="{Binding !OtpCheckBox}" ></TextBox>
+                    <TextBox Margin="145,0,0,0" Width="270" Grid.Row="3" 
+                             Text="{Binding LaunchOptTextBox}" IsEnabled="{Binding LaunchOptCheckBox}"></TextBox>
+                    <!-- Do not allow edit Affinity Bitmask if Core Affinity is enabled -->
+                    <TextBox Margin="145,0,0,0" Width="270" Grid.Row="4" 
+                             Text="{Binding AffinityBitmaskTextBox}" IsEnabled="{Binding !CoreAffinityCheckBox}"></TextBox>
+                    <CheckBox Margin="85,0,0,0" Grid.Row="5" 
+                              IsChecked="{Binding RememberDataCheckBox}" IsEnabled="{Binding !LoginAutomaticallyCheckBox}">Remember Data</CheckBox>
+                    
+                    <Label Margin="288,0,0,0" Grid.Row="2">Region</Label>
+                    <CheckBox Name="LoginAutomaticallyCb" Margin="255,0,0,0" Grid.Row="5" 
+                              IsChecked="{Binding LoginAutomaticallyCheckBox}">Login Automatically</CheckBox>
+                    <CheckBox Margin="255,0,0,0" Grid.Row="6" 
+                              IsChecked="{Binding GameUpdateCheckBox}">Check Game Update</CheckBox>
+                    <CheckBox Margin="255,0,0,0" Grid.Row="7" 
+                              IsChecked="{Binding DebugModeCheckBox}">Debug Mode</CheckBox>
+                    
+                    <ComboBox VerticalAlignment="Center" Margin="340,0,0,0" Width="75" Grid.Row="2" 
+                              SelectedIndex="{Binding RegionComboBox}">
+                        <ComboBoxItem>NA</ComboBoxItem>
+                        <ComboBoxItem>EU</ComboBoxItem>
+                    </ComboBox>
+                </Grid>
+                
+                <StackPanel Grid.Row="1" Margin="10, 0">
+                    <Button Width="420" HorizontalContentAlignment="Center"
+                            Command="{Binding StartGameBtnCommand}" IsEnabled="{Binding EnableStartGameBtn}">Start Game</Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <!-- Bottom bar -->
+        <Grid Grid.Row="1" Margin="8" ColumnDefinitions="Auto, *, Auto">
+            <Button Grid.Column="0" Margin="0,0,8,0" Command="{Binding SetGamePathBtnCommand}">Set Game Path</Button>
+            <Label Grid.Column="1" VerticalAlignment="Center" Content="{Binding GamePathLabel}"></Label>
+            <Button Grid.Column="2" Margin="8,0,0,0" Command="{Binding ReportIssueBtnCommand}">Report An Issue</Button>
+        </Grid>
+    </Grid>
+
+</UserControl>

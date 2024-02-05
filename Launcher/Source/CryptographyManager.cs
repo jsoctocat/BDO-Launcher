@@ -8,25 +8,17 @@ using System.Text;
 
 namespace Launcher.Source
 {
-
     public static class CryptographyManager
     {
-
-        private static readonly int _keySize = (256 / 8);
-        private static readonly Encoding _defaultEncoding = Encoding.UTF8;
-
-        private static RNGCryptoServiceProvider _rngCryptoServiceProvider;
-        private static RijndaelManaged _rijndaelManaged;
+        private static readonly int _keySize = 128 / 8;
+        private static Aes _aes;
 
         static CryptographyManager()
         {
-            _rngCryptoServiceProvider = new RNGCryptoServiceProvider();
-            _rijndaelManaged = new RijndaelManaged()
-            {
-                BlockSize = 256,
-                Mode = CipherMode.CBC,
-                Padding = PaddingMode.PKCS7
-            };
+            _aes = Aes.Create();
+            _aes.BlockSize = 128;
+            _aes.Mode = CipherMode.CBC;
+            _aes.Padding = PaddingMode.PKCS7;
         }
 
         public static byte[] Encrypt(string value)
@@ -34,15 +26,15 @@ namespace Launcher.Source
             if (String.IsNullOrEmpty(value))
                 throw new ArgumentNullException(nameof(value));
 
-            byte[] salt = GenerateRandomSeed();
-            byte[] vector = GenerateRandomSeed();
-            byte[] valueRaw = _defaultEncoding.GetBytes(value);
+            byte[] salt = RandomNumberGenerator.GetBytes(_keySize);
+            byte[] vector = RandomNumberGenerator.GetBytes(_keySize);
+            byte[] valueRaw = Encoding.UTF8.GetBytes(value);
 
-            using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(GetAssemblyGuid(), salt))
+            using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(GetAssemblyGuid(), salt, 1000, HashAlgorithmName.SHA256))
             {
                 byte[] derivedData = rfc2898DeriveBytes.GetBytes(_keySize);
 
-                using (ICryptoTransform cryptoTransform = _rijndaelManaged.CreateEncryptor(derivedData, vector))
+                using (ICryptoTransform cryptoTransform = _aes.CreateEncryptor(derivedData, vector))
                 using (MemoryStream memoryStream = new MemoryStream())
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
                 {
@@ -65,38 +57,35 @@ namespace Launcher.Source
             if ((value == null) || !value.Any())
                 throw new ArgumentNullException(nameof(value));
 
-            byte[] salt = value.Take(_keySize).ToArray();
-            byte[] vector = value.Skip(_keySize).Take(_keySize).ToArray();
-            byte[] encryptedValue = value.Skip(_keySize * 2).Take(_keySize).ToArray();
-
-            using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(GetAssemblyGuid(), salt))
+            try
             {
-                byte[] derivedData = rfc2898DeriveBytes.GetBytes(_keySize);
+                byte[] salt = value.Take(_keySize).ToArray();
+                byte[] vector = value.Skip(_keySize).Take(_keySize).ToArray();
+                byte[] encryptedValue = value.Skip(_keySize * 2).Take(value.Length - _keySize * 2).ToArray();
 
-                using (ICryptoTransform cryptoTransform = _rijndaelManaged.CreateDecryptor(derivedData, vector))
-                using (MemoryStream memoryStream = new MemoryStream(encryptedValue))
-                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Read))
+                using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(GetAssemblyGuid(), salt, 1000, HashAlgorithmName.SHA256))
                 {
-                    byte[] decryptedValue = new byte[encryptedValue.Length];
+                    byte[] derivedData = rfc2898DeriveBytes.GetBytes(_keySize);
 
-                    int decryptedValueLength = cryptoStream.Read(decryptedValue, 0, decryptedValue.Length);
+                    using (ICryptoTransform cryptoTransform = _aes.CreateDecryptor(derivedData, vector))
+                    using (MemoryStream memoryStream = new MemoryStream(encryptedValue))
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Read))
+                    {
+                        byte[] decryptedValue = new byte[encryptedValue.Length];
 
-                    return _defaultEncoding.GetString(decryptedValue, 0, decryptedValueLength);
+                        int decryptedValueLength = cryptoStream.Read(decryptedValue, 0, decryptedValue.Length);
+
+                        return Encoding.UTF8.GetString(decryptedValue, 0, decryptedValueLength);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                return String.Empty;
             }
         }
 
-        private static byte[] GenerateRandomSeed()
-        {
-            byte[] randomSeed = new byte[32];
-
-            _rngCryptoServiceProvider.GetBytes(randomSeed);
-
-            return randomSeed;
-        }
-
         private static string GetAssemblyGuid() => (Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(GuidAttribute)) as GuidAttribute).Value.Replace("-", String.Empty);
-
     }
 
 }
