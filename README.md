@@ -5,7 +5,7 @@
 
 ## Description
 <p align="center">
-  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/73fe4d0e-9256-44ce-80da-9a193535cf4f">
+  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/4bf7e4c6-385c-45b3-832d-33c0742b4d92">
 </p>
 
 - A custom game launcher (NA/EU, non-steam) made to replace the official game launcher. 
@@ -49,6 +49,10 @@
 3. Hit the ENTER key or click Login
 
 ## I encountered a captcha. What should I do now?
+<p align="center">
+  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/3064481b-b68f-4ee4-85e7-6363ecaaea23">
+</p>
+
 1. Do not close the error pop up
 2. Check if debug mode is on, if off then turn on debug mode then restart the launcher
 3. If debug mode is on, complete the captcha from the browser pop up
