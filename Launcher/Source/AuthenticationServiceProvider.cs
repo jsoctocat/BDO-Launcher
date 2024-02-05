@@ -157,26 +157,28 @@ public class AuthenticationServiceProvider
         var errorCatcher = page.WaitForResponseAsync(r => r.Request.Url.Contains("LoginProcess") ||
                                                            r.Request.Url.Contains("LoginOtpAuth") && r.Request.Method == "POST");
         
+        // Fill email and password textboxes and uncheck the IP checkbox
+        await page.EvaluateAsync(javascript);
+        
         // Check if Captcha is requested
         var checkForCaptchaError = @"
                 (function(){
-                    var query = document.querySelector('.recaptcha_wrap');
-                    var result = false;
+                    var query = document.querySelector('.layer_launcher.inner_layer.active[data-type=""alert""]');
+                    var result = null;
                     if(query != null)
-                        result = true;
+                        result = query.innerText;
                     return result;
                 })()";
         
-        var errorDetected = await page.EvaluateAsync<bool>(checkForCaptchaError);
+        var errorDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
 
-        if (errorDetected)
+        if (!string.IsNullOrEmpty(errorDetected))
         {
             var msgBox = MsgBoxManager.GetMessageBox("Captcha Detected", "Please complete the captcha verification.", true);
             await msgBox.ShowAsync();
+            //await page.ClickAsync(".btnDone.btn.btn_blue.btn_mid"); //captcha alert pop up confirm btn, doesn't do anything
+            await page.ClickAsync("#btnLogin");
         }
-        
-        // Fill email and password textboxes and uncheck the IP checkbox
-        await page.EvaluateAsync(javascript);
         
         // Check for Login process response
         var xhrResponse = await errorCatcher;

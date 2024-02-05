@@ -95,8 +95,12 @@ public partial class MainViewModel : ViewModelBase
         {
             Headless = !DebugModeCheckBox, // set false to show browser, mostly for debugging purpose
             UserAgent = "BLACKDESERT",
-            ExecutablePath = basePath + "\\.playwright\\firefox-1438\\firefox\\firefox.exe",
         };
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            browserLaunchOptions.ExecutablePath = basePath + "/.playwright/firefox-1438/firefox/firefox";
+        else
+            browserLaunchOptions.ExecutablePath = basePath + "\\.playwright\\firefox-1438\\firefox\\firefox.exe";
 
         if (!File.Exists(browserLaunchOptions.ExecutablePath))
         {
@@ -223,7 +227,7 @@ public partial class MainViewModel : ViewModelBase
     {
         string newGameDirectoryPath = await SelectGameDirectoryPath();
 
-        if (newGameDirectoryPath != null)
+        if (!string.IsNullOrEmpty(newGameDirectoryPath))
         {
             _configuration.GameDirectoryPath = newGameDirectoryPath;
 
@@ -373,9 +377,9 @@ public partial class MainViewModel : ViewModelBase
                 string command = String.Empty;;
                 
                 if (LaunchOptCheckBox)
-                    command = $"{LaunchOptTextBox} {launchPath} {playToken}";
+                    command = $"{LaunchOptTextBox} '{launchPath}' {playToken}";
                 else
-                    command = $"STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/ nohup ~/.local/share/Steam/compatibilitytools.d/GE-Proton8-30/proton run {launchPath} {playToken}";
+                    command = $"STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/ nohup ~/.local/share/Steam/compatibilitytools.d/GE-Proton8-30/proton run '{launchPath}' {playToken}";
                 
                 process.StartInfo.FileName = "/bin/bash";
                 process.StartInfo.Arguments = "-c \" " + command + " \"";
@@ -484,11 +488,7 @@ public partial class MainViewModel : ViewModelBase
     private async Task<bool> CheckGameDirectoryPathAndPrompt()
     {
         string messageBoxText = String.Empty;
-
-        var test0 = Path.Combine(_configuration.GameDirectoryPath, "BlackDesertLauncher.exe");
-        var test1 = !File.Exists(test0);
-        var test2 = !Directory.Exists(_configuration.GameDirectoryPath);
-
+        
         if (String.IsNullOrEmpty(_configuration.GameDirectoryPath))
             messageBoxText = "The path to the game is not set.\nDo you want to set it now?";
         else if (!Directory.Exists(_configuration.GameDirectoryPath) || !File.Exists(Path.Combine(_configuration.GameDirectoryPath, "BlackDesertLauncher.exe")))
@@ -503,7 +503,7 @@ public partial class MainViewModel : ViewModelBase
             async () => { 
                 string newGameDirectoryPath = await SelectGameDirectoryPath();
 
-                if (newGameDirectoryPath != null)
+                if (!string.IsNullOrEmpty(newGameDirectoryPath))
                 {
                     _configuration.GameDirectoryPath = newGameDirectoryPath;
 
@@ -520,9 +520,12 @@ public partial class MainViewModel : ViewModelBase
     private async Task<string> SelectGameDirectoryPath()
     {
         var dialog = MainWindow.Instance.StorageProvider;
-        FolderPickerOpenOptions test = new FolderPickerOpenOptions();
-        test.AllowMultiple = false;
-        var result = await dialog.OpenFolderPickerAsync(test);
+        FolderPickerOpenOptions openOptions = new FolderPickerOpenOptions
+        {
+            AllowMultiple = false
+        };
+        var result = await dialog.OpenFolderPickerAsync(openOptions);
+        if (result.Count == 0) return string.Empty;
         return result[0].Path.LocalPath;
     }
 }

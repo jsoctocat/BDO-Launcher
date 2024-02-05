@@ -50,7 +50,7 @@
 
 ## I encountered a captcha. What should I do now?
 <p align="center">
-  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/3064481b-b68f-4ee4-85e7-6363ecaaea23">
+  <img src="https://github.com/jsoctocat/BDO-Launcher/assets/42134925/39f44e87-4ac3-4084-af4a-112d84e5040c">
 </p>
 
 1. Do not close the error pop up
