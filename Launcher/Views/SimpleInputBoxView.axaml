@@ -18,7 +18,7 @@
         </Grid>
         <!--Buttons-->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Grid.Row="2" HorizontalAlignment="Center">
-            <Button Name="OkButton" Width="180" HorizontalContentAlignment="Center" IsDefault="True" Command="{Binding OtpLoginBtn}" >Login</Button>
+            <Button Name="OkButton" Width="180" HorizontalContentAlignment="Center" IsDefault="True" Command="{Binding OtpLoginBtn}" IsEnabled="{Binding !EnableStartGameBtn}">Login</Button>
         </StackPanel>
     </Grid>
 </UserControl>

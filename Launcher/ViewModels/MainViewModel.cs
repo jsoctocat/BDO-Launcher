@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Launcher.Source;
@@ -261,15 +262,22 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task OtpLoginBtn()
     {
+        EnableStartGameBtn = true;
         if (OtpNotMasterTextBox.Length != 6 || !OtpNotMasterTextBox.All(char.IsDigit))
         {
+            EnableStartGameBtn = false;
             var msg = MsgBoxManager.GetMessageBox("Error", "Please enter a valid OTP.", true);
             await msg.ShowAsync();
         }
-        else if(await StartGameAsync(false, OtpNotMasterTextBox)) { }
-        
-        MainWindow.Instance.Close();
-        Environment.Exit(0);
+        else if(await StartGameAsync(false, OtpNotMasterTextBox))
+        {
+            MainWindow.Instance.Close();
+            Environment.Exit(0);
+        }
+        else
+        {
+            EnableStartGameBtn = false;
+        }
     }
     
     private void OneTimePasswordAsync()
@@ -283,6 +291,12 @@ public partial class MainViewModel : ViewModelBase
         _otpWindow.Closing += Otp_FormClosing;
 
         _otpWindow.Show();
+
+        // Put focus on textbox when otp window pops up
+        foreach (var tBox in _otpWindow.GetVisualDescendants().OfType<TextBox>())
+        {
+            tBox.Focus();
+        }
     }
 
     private void Otp_FormClosing(object? sender, WindowClosingEventArgs e)
