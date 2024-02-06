@@ -70,13 +70,8 @@ namespace Launcher.Source
                     using (ICryptoTransform cryptoTransform = _aes.CreateDecryptor(derivedData, vector))
                     using (MemoryStream memoryStream = new MemoryStream(encryptedValue))
                     using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Read))
-                    {
-                        byte[] decryptedValue = new byte[encryptedValue.Length];
-
-                        int decryptedValueLength = cryptoStream.Read(decryptedValue, 0, decryptedValue.Length);
-
-                        return Encoding.UTF8.GetString(decryptedValue, 0, decryptedValueLength);
-                    }
+                    using (var plainTextReader = new StreamReader(cryptoStream))
+                        return plainTextReader.ReadToEnd();
                 }
             }
             catch (Exception e)
