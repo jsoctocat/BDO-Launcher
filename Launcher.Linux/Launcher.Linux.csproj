@@ -9,15 +9,16 @@
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <FileVersion>1.0.0.0</FileVersion>
         <ApplicationIcon>..\Launcher\Assets\logo.ico</ApplicationIcon>
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <PlatformTarget>x64</PlatformTarget>
-      <DebugType>none</DebugType>
+        <PlatformTarget>x64</PlatformTarget>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,6 +28,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Launcher\Launcher.csproj"/>
+        <ProjectReference Include="..\Launcher\Launcher.csproj" />
+        <Content Include="Launcher.desktop">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\Launcher\Assets\logo.ico">
+            <Link>logo.ico</Link>
+        </None>
     </ItemGroup>
 </Project>

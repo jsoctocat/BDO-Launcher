@@ -5,12 +5,14 @@ VisualStudioVersion = 17.3.32811.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Launcher", "Launcher\Launcher.csproj", "{EBFA8512-1EA5-4D8C-B4AC-AB5B48A6D568}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Launcher.Desktop", "Launcher.Desktop\Launcher.Desktop.csproj", "{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Launcher.Windows", "Launcher.Windows\Launcher.Windows.csproj", "{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher.Linux", "Launcher.Linux\Launcher.Linux.csproj", "{0BE36F5B-77C6-4248-8EA7-1F2F117F52CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BE36F5B-77C6-4248-8EA7-1F2F117F52CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BE36F5B-77C6-4248-8EA7-1F2F117F52CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BE36F5B-77C6-4248-8EA7-1F2F117F52CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BE36F5B-77C6-4248-8EA7-1F2F117F52CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

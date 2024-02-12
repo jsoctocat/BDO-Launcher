@@ -1,0 +1,19 @@
+[Desktop Entry]
+Categories=Game;
+Comment[en_US]=env DOTNET_ROOT=$HOME/.dotnet bash -c \\$(dirname %k)/Launcher.Linux
+Comment=
+Exec=bash -c "DOTNET_ROOT=\\$HOME/.dotnet ./Launcher.Linux"
+GenericName[en_US]=Custom Black Desert Launcher
+GenericName=Custom Black Desert Launcher
+Icon=steam_icon_582660
+MimeType=
+Name[en_US]=BDO Launcher
+Name=BDO Launcher
+Path=~/Downloads/linux-x64
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+Version=1.0
+X-KDE-SubstituteUID=false
+X-KDE-Username=

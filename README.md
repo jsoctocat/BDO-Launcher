@@ -58,12 +58,7 @@
 3. If debug mode is on, complete the captcha from the browser pop up
 4. Close the error pop up, everything else should be automatic
 
-## Linux Setup
-1. By default the following launch options are used to start the game on Linux, if your paths are different you have to edit the Launch Option
-2. STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/ nohup ~/.local/share/Steam/compatibilitytools.d/GE-Proton8-30/proton run
-2. If you need any additional launch options put them before nohup such as ../tdata/ DXVK_HUD=1 DRI_PRIME=1 MESA_VK_DEVICE_SELECT=1 nohup
-3. CPU core affinity tweak is not supported on Linux
-- NOTE: "nohup" must be included or the game will close with the launcher at start up, the above paths are default steam install locations, and is using GE-Proton8-30, **possible failure at launch if directories have white spaces**
+## [Linux Setup (CLICK ME)](https://github.com/jsoctocat/BDO-Launcher/wiki/Linux-Setup)
 
 ## FAQ
 ### *Why was this created?*
