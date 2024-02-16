@@ -26,10 +26,17 @@ namespace Launcher.Source
             if (String.IsNullOrEmpty(value))
                 throw new ArgumentNullException(nameof(value));
 
+            // https://www.martinstoeckli.ch/hash/en/index.php
+            // A salt should contain at least 20 characters.
+            // The salt is not a secret, and can be stored plaintext in the database.
+            // Using a salt prevents that anybody can just google for the password.
+            // Each password should get its own, preferably unique salt.
+            string saltString = "k32duem01vZsQ2lB8g0s";
             byte[] salt = RandomNumberGenerator.GetBytes(_keySize);
             byte[] vector = RandomNumberGenerator.GetBytes(_keySize);
             byte[] valueRaw = Encoding.UTF8.GetBytes(value);
 
+            // Consider Switching to Argon2
             using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(GetAssemblyGuid(), salt, 1000, HashAlgorithmName.SHA256))
             {
                 byte[] derivedData = rfc2898DeriveBytes.GetBytes(_keySize);

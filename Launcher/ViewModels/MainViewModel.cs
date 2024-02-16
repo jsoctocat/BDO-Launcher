@@ -22,7 +22,7 @@ public partial class MainViewModel : ViewModelBase
     private IBrowserContext _browser;
     private Configuration _configuration;
     private Window _otpWindow;
-    private const string _version = "2.0.0";
+    private const string _version = "2.0.2";
 
     public MainViewModel()
     {
