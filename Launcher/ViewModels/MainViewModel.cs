@@ -388,12 +388,19 @@ public partial class MainViewModel : ViewModelBase
             // Ignore run as admin when on linux
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                string command = String.Empty;;
+                string command = String.Empty;
+                
+                //582660 is the steam ID for Black Desert
+                string compatDataFolder = "~/.local/share/Steam/steamapps/compatdata/582660";
+                if(!Directory.Exists(compatDataFolder))
+                {
+                    Directory.CreateDirectory(compatDataFolder);
+                }
                 
                 if (LaunchOptCheckBox)
                     command = $"{LaunchOptTextBox} '{launchPath}' {playToken}";
                 else
-                    command = $"STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/ nohup ~/.local/share/Steam/steamapps/common/'Proton - Experimental'/proton run '{launchPath}' {playToken}";
+                    command = $"STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.local/share/Steam/ STEAM_COMPAT_DATA_PATH=~/.local/share/Steam/steamapps/compatdata/582660 SteamAppId=582660 SteamGameId=582660 nohup ~/.local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/_v2-entry-point ~/.local/share/Steam/steamapps/common/'Proton - Experimental'/proton run '{launchPath}' {playToken}";
                 
                 process.StartInfo.FileName = "/bin/bash";
                 process.StartInfo.Arguments = "-c \" " + command + " \"";
