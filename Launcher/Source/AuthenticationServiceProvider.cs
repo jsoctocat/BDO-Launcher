@@ -67,13 +67,12 @@ public class AuthenticationServiceProvider
             // Wait for login page to load
             await page.WaitForSelectorAsync("input[id=_email]");
 
-            var loginScript = $@"
-                document.querySelector('#_email').value = '{username}';
-                document.querySelector('#_password').value = '{password}';
-                document.querySelector('#isIpCheck').value = 'false';
-                document.querySelector('#btnLogin').click();";
+            await page.FillAsync("#_email", $"{username}");
+            await page.FillAsync("#_password", $"{password}");
+            await page.SetCheckedAsync("#isIpCheck", false);
+            await page.ClickAsync("#btnLogin");
 
-            errorMsg = await CheckErrorMsg(page, loginScript, "loginScript");
+            errorMsg = await CheckErrorMsg(page, "loginScript");
             if (!string.IsNullOrEmpty(errorMsg))
                 return errorMsg;
 
@@ -93,18 +92,23 @@ public class AuthenticationServiceProvider
                 }
                 
                 // Wait for the OTP page to load first
+                // This checks for whether or not OTP input boxes are loaded
                 await page.WaitForSelectorAsync(".input_otp_wrap.js-inputNumWrap");
 
-                var otpScript = $@"
-                document.querySelector('#otpInput1').value = '{otpString[0]}';
-                document.querySelector('#otpInput2').value = '{otpString[1]}';
-                document.querySelector('#otpInput3').value = '{otpString[2]}';
-                document.querySelector('#otpInput4').value = '{otpString[3]}';
-                document.querySelector('#otpInput5').value = '{otpString[4]}';
-                document.querySelector('#otpInput6').value = '{otpString[5]}';
-                document.querySelector('.btn.btn_big.btn_blue.btnCheckOtp').click();";
+                // Fill the OTP
+                await page.FillAsync("#otpInput1", $"{otpString[0]}");
+                await page.FillAsync("#otpInput2", $"{otpString[1]}");
+                await page.FillAsync("#otpInput3", $"{otpString[2]}");
+                await page.FillAsync("#otpInput4", $"{otpString[3]}");
+                await page.FillAsync("#otpInput5", $"{otpString[4]}");
+                await page.FillAsync("#otpInput6", $"{otpString[5]}");
+                
+                // Check for OTP Confirm button disable state :not([disabled])
+                await page.WaitForSelectorAsync(".btn.btn_big.btn_blue.btnCheckOtp:not([disabled])");
+                
+                await page.ClickAsync(".btn.btn_big.btn_blue.btnCheckOtp");
 
-                errorMsg = await CheckErrorMsg(page, otpScript, "otpScript");
+                errorMsg = await CheckErrorMsg(page, "otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
                     return errorMsg;
             }
@@ -151,28 +155,25 @@ public class AuthenticationServiceProvider
         }
     }
 
-    private async Task<string> CheckErrorMsg(IPage page, string javascript, string step)
+    private async Task<string> CheckErrorMsg(IPage page, string step)
     {
         // This needs to be before login btn is clicked, it will get the response of login process
         var errorCatcher = page.WaitForResponseAsync(r => r.Request.Url.Contains("LoginProcess") ||
                                                            r.Request.Url.Contains("LoginOtpAuth") && r.Request.Method == "POST");
         
-        // Fill email and password textboxes and uncheck the IP checkbox
-        await page.EvaluateAsync(javascript);
-        
         // Check if Captcha is requested
         var checkForCaptchaError = @"
-                (function(){
+                () => {
                     var query = document.querySelector('.layer_launcher.inner_layer.active[data-type=""alert""]');
                     var result = null;
                     if(query != null)
                         result = query.innerText;
                     return result;
-                })()";
+                }";
         
-        var errorDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
+        var captchaDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
 
-        if (!string.IsNullOrEmpty(errorDetected))
+        if (!string.IsNullOrEmpty(captchaDetected))
         {
             var msgBox = MsgBoxManager.GetMessageBox("Captcha Detected", "Please complete the captcha verification.", true);
             await msgBox.ShowAsync();
