@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -97,17 +98,25 @@ public partial class MainViewModel : ViewModelBase
             Headless = !DebugModeCheckBox, // set false to show browser, mostly for debugging purpose
             UserAgent = "BLACKDESERT",
         };
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            browserLaunchOptions.ExecutablePath = basePath + "/.playwright/firefox-1438/firefox/firefox";
-        else
-            browserLaunchOptions.ExecutablePath = basePath + "\\.playwright\\firefox-1438\\firefox\\firefox.exe";
-
-        if (!File.Exists(browserLaunchOptions.ExecutablePath))
+        
+        var exitCode = Microsoft.Playwright.Program.Main(new[] {"install", "firefox"});
+        if (exitCode != 0)
         {
-            var msgBox = MsgBoxManager.GetMessageBox("Error", "Playwright firefox 1438 is missing", true);
+            var msgBox = MsgBoxManager.GetMessageBox("Error", $"Playwright exited with code {exitCode}", true, 
+                false, false, () => { Environment.Exit(0); });
             await msgBox.ShowAsync();
         }
+
+        // if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        //     browserLaunchOptions.ExecutablePath = basePath + "/.playwright/firefox-1438/firefox/firefox";
+        // else
+        //     browserLaunchOptions.ExecutablePath = basePath + "\\.playwright\\firefox-1438\\firefox\\firefox.exe";
+        //
+        // if (!File.Exists(browserLaunchOptions.ExecutablePath))
+        // {
+        //     var msgBox = MsgBoxManager.GetMessageBox("Error", "Playwright firefox 1438 is missing", true);
+        //     await msgBox.ShowAsync();
+        // }
         
         // create a single browser
         var playwright = await Playwright.CreateAsync();

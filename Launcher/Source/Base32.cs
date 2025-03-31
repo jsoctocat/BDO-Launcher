@@ -96,7 +96,7 @@ namespace Launcher.Source
         //https://tools.ietf.org/html/rfc4648
         private static int CharToValue(char c)
         {
-            var value = (int)c;
+            int value = c;
 
             // 65-90 == uppercase letters
             if (value > 64 && value < 91)

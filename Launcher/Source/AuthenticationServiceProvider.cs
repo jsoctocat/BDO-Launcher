@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Security;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
 
@@ -78,35 +79,39 @@ public class AuthenticationServiceProvider
 
             if (useOtp)
             {
+                // Wait for the OTP page to load first
+                // This checks for whether or not OTP input boxes are loaded
+                await page.WaitForSelectorAsync(".input_otp_wrap.js-inputNumWrap");
+                
                 Otp _otp = new Otp();
                 string otpString = null;
                 // if OTP input is not null or empty then use it instead of master OTP
                 if (useMasterOtp)
                 {
-                    _otp.Password = Base32Converter.ToBytes(otp);
-                    otpString = _otp.OneTimePassword.ToString("D6");
+                    otpString = _otp.GetOneTimePassword(otp);
+                    // \s is white space + is more than 1
+                    // https://stackoverflow.com/questions/6219454/efficient-way-to-remove-all-whitespace-from-string
+                    Regex.Replace(otpString, @"\s+", "0");
                 }
                 else
                 {
                     otpString = otp;
                 }
                 
-                // Wait for the OTP page to load first
-                // This checks for whether or not OTP input boxes are loaded
-                await page.WaitForSelectorAsync(".input_otp_wrap.js-inputNumWrap");
-
                 // Fill the OTP
-                await page.FillAsync("#otpInput1", $"{otpString[0]}");
-                await page.FillAsync("#otpInput2", $"{otpString[1]}");
-                await page.FillAsync("#otpInput3", $"{otpString[2]}");
-                await page.FillAsync("#otpInput4", $"{otpString[3]}");
-                await page.FillAsync("#otpInput5", $"{otpString[4]}");
-                await page.FillAsync("#otpInput6", $"{otpString[5]}");
+                await page.EvaluateAsync<int>($@"async () => {{
+                    document.querySelector('#otpInput1').value = '{otpString[0]}';
+                    document.querySelector('#otpInput2').value = '{otpString[1]}';
+                    document.querySelector('#otpInput3').value = '{otpString[2]}';
+                    document.querySelector('#otpInput4').value = '{otpString[3]}';
+                    document.querySelector('#otpInput5').value = '{otpString[4]}';
+                    document.querySelector('#otpInput6').value = '{otpString[5]}';
+                }}");
                 
                 // Check for OTP Confirm button disable state :not([disabled])
                 await page.WaitForSelectorAsync(".btn.btn_big.btn_blue.btnCheckOtp:not([disabled])");
                 
-                await page.ClickAsync(".btn.btn_big.btn_blue.btnCheckOtp");
+                await page.ClickAsync(".btn.btn_big.btn_blue.btnCheckOtp:not([disabled])");
 
                 errorMsg = await CheckErrorMsg(page, "otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
@@ -162,7 +167,9 @@ public class AuthenticationServiceProvider
                                                            r.Request.Url.Contains("LoginOtpAuth") && r.Request.Method == "POST");
         
         // Check if Captcha is requested
-        var checkForCaptchaError = @"
+        if (step == "loginScript")
+        {
+            var checkForCaptchaError = @"
                 () => {
                     var query = document.querySelector('.layer_launcher.inner_layer.active[data-type=""alert""]');
                     var result = null;
@@ -171,14 +178,15 @@ public class AuthenticationServiceProvider
                     return result;
                 }";
         
-        var captchaDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
+            var captchaDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
 
-        if (!string.IsNullOrEmpty(captchaDetected))
-        {
-            var msgBox = MsgBoxManager.GetMessageBox("Captcha Detected", "Please complete the captcha verification.", true);
-            await msgBox.ShowAsync();
-            //await page.ClickAsync(".btnDone.btn.btn_blue.btn_mid"); //captcha alert pop up confirm btn, doesn't do anything
-            await page.ClickAsync("#btnLogin");
+            if (!string.IsNullOrEmpty(captchaDetected))
+            {
+                var msgBox = MsgBoxManager.GetMessageBox("Captcha Detected", "Please complete the captcha verification.", true);
+                await msgBox.ShowAsync();
+                //await page.ClickAsync(".btnDone.btn.btn_blue.btn_mid"); //captcha alert pop up confirm btn, doesn't do anything
+                await page.ClickAsync("#btnLogin");
+            }
         }
         
         // Check for Login process response
