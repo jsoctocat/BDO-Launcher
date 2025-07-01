@@ -59,6 +59,7 @@
 4. Close the error pop up, everything else should be automatic
 
 ## [Linux Setup (CLICK ME)](https://github.com/jsoctocat/BDO-Launcher/wiki/Linux-Setup)
+## [OSX Setup (CLICK ME)](https://github.com/jsoctocat/BDO-Launcher/wiki/OSX-Setup)
 
 ## FAQ
 ### *Why was this created?*

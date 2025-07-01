@@ -12,13 +12,14 @@ namespace Launcher.Source;
 
 public class AuthenticationServiceProvider
 {
-    private const string LauncherReturnUrl = "https://launcher.naeu.playblackdesert.com/Login/Index";
-    private const string AuthenticationEndPoint = "https://launcher.naeu.playblackdesert.com/Default/AuthenticateAccount";
-    
     public async Task<string> AuthenticateAsync(IBrowserContext browser, string username, string password,
         string region,
         bool useOtp, bool useMasterOtp, string otp)
     {
+        string launcherRegion = (region == "NA" || region == "EU") ? "naeu" : region.ToLower();
+        string LauncherReturnUrl = "https://launcher." + launcherRegion + ".playblackdesert.com/Login/Index";
+        string AuthenticationEndPoint = "https://launcher." + launcherRegion + ".playblackdesert.com/Default/AuthenticateAccount";
+        
         try
         {
             /* since the removal of pc registration, mac address is no longer needed
@@ -45,7 +46,7 @@ public class AuthenticationServiceProvider
             // intercept any Url that's not specified, used to block tracking scripts/sites for faster performance
             await page.RouteAsync("**/*", async route =>
             {
-                if (route.Request.Url.StartsWith("https://launcher.naeu.playblackdesert.com") ||
+                if (route.Request.Url.StartsWith("https://launcher." + launcherRegion + ".playblackdesert.com") ||
                     route.Request.Url.StartsWith("https://account.pearlabyss.com") ||
                     route.Request.Url.StartsWith("https://s1.pearlcdn.com/account/contents/js") ||
                     route.Request.Url.Contains("hcaptcha.com"))

@@ -61,6 +61,7 @@
                               SelectedIndex="{Binding RegionComboBox}">
                         <ComboBoxItem>NA</ComboBoxItem>
                         <ComboBoxItem>EU</ComboBoxItem>
+                        <ComboBoxItem>SA</ComboBoxItem>
                     </ComboBox>
                 </Grid>
                 

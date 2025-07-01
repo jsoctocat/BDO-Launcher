@@ -167,11 +167,12 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnRegionComboBoxChanged(int value)
     {
-        string[] region = { "NA", "EU" };
+        string[] region = { "NA", "EU", "SA" };
         string[] regionInfo =
         {
             $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=0\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.na.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://na-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://na-game-trade.naeu.playblackdesert.com/",
-            $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=1\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.eu.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://eu-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://eu-game-trade.naeu.playblackdesert.com/"
+            $"[SERVICE]\nTYPE=NA\nRES=_EN_\nnationType=1\n\n[NA]\nAUTHENTIC_DOMAIN=gameauth.eu.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://naeu-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://eu-trade.naeu.playblackdesert.com/\ngameTradeMarketUrl=https://eu-game-trade.naeu.playblackdesert.com/",
+            "[SERVICE]\nTYPE=SA\nRES=_PT_\nnationType=3\n\n[SA]\nAUTHENTIC_DOMAIN=gameauth.sa.playblackdesert.com\nAUTHENTIC_PORT=8888\nPATCH_URL=http://sa-o-dn.playblackdesert.com/UploadData/\nviewTradeMarketUrl=https://trade.sa.playblackdesert.com/\ngameTradeMarketUrl=https://game-trade.sa.playblackdesert.com/",
         };
             
         var regionFilePath = Path.Combine(_configuration.GameDirectoryPath, "region");
@@ -345,7 +346,7 @@ public partial class MainViewModel : ViewModelBase
         var authenticationServiceProvider = new AuthenticationServiceProvider();
         string otp = useMasterOtp ? OtpTextBox : otpNotMaster;
         
-        string[] gameRegion = ["NA", "EU"];
+        string[] gameRegion = ["NA", "EU", "SA"];
         var playToken = await authenticationServiceProvider.AuthenticateAsync(
             _browser,
             UsernameTextBox, 
