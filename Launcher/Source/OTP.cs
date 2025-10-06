@@ -7,8 +7,6 @@ namespace Launcher.Source
 {
     public class Otp
     {
-        private static long GetUnixTimestamp() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
         public string GetOneTimePassword(string MasterOTP)
         {
             // https://tools.ietf.org/html/rfc4226
@@ -16,13 +14,14 @@ namespace Launcher.Source
             // https://security.stackexchange.com/questions/194782/is-using-hotp-only-authorization-considered-weak
             // https://security.stackexchange.com/questions/178746/how-can-authy-use-google-authenticator-qr
             // https://github.com/kspearrin/Otp.NET/
-            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
-            //var timestampBytes = BitConverter.GetBytes(timestamp).Reverse().ToArray();
+            
+            long timestampUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
+            
             byte[] timestampBytes = new byte[8];
             for (int i = 7; i >= 0; i--)
             {
-                timestampBytes[i] = (byte)(timestamp & 0xFF);
-                timestamp >>= 8;
+                timestampBytes[i] = (byte)(timestampUnix & 0xFF);
+                timestampUnix >>= 8;
             }
 
             var masterOTPinBytes = Base32Converter.ToBytes(MasterOTP);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Launcher.Source
 {
@@ -6,49 +7,37 @@ namespace Launcher.Source
     //by Shane
     public static class Base32Converter
     {
+        private const string Base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        
         public static byte[] ToBytes(string input)
         {
             if (string.IsNullOrEmpty(input))
-            {
                 throw new ArgumentNullException(nameof(input));
-            }
+            
+            input = input.Trim().Replace(" ", "").Replace("=", "").ToUpperInvariant();
 
-            input = input.TrimEnd('='); // remove padding characters
-            var byteCount = input.Length * 5 / 8; // this must be TRUNCATED
-            var returnArray = new byte[byteCount];
+            var output = new List<byte>();
+            int buffer = 0;
+            int bitsLeft = 0;
 
-            byte curByte = 0, bitsRemaining = 8;
-            var arrayIndex = 0;
-
-            foreach (var c in input)
+            foreach (char c in input)
             {
-                var cValue = CharToValue(c);
-                var lValue = Convert.ToInt32(c);
+                int val = Base32Alphabet.IndexOf(c);
+                if (val < 0)
+                    throw new FormatException($"Invalid Base32 character: {c}");
 
-                var mask = 0;
-                if (bitsRemaining > 5)
+                buffer <<= 5;
+                buffer |= val;
+                bitsLeft += 5;
+
+                if (bitsLeft >= 8)
                 {
-                    mask = cValue << (bitsRemaining - 5);
-                    curByte = (byte)(curByte | mask);
-                    bitsRemaining -= 5;
-                }
-                else
-                {
-                    mask = cValue >> (5 - bitsRemaining);
-                    curByte = (byte)(curByte | mask);
-                    returnArray[arrayIndex++] = curByte;
-                    curByte = (byte)(cValue << (3 + bitsRemaining));
-                    bitsRemaining += 3;
+                    output.Add((byte)((buffer >> (bitsLeft - 8)) & 0xFF));
+                    bitsLeft -= 8;
                 }
             }
 
-            // if we didn't end with a full byte
-            if (arrayIndex != byteCount)
-            {
-                returnArray[arrayIndex] = curByte;
-            }
-
-            return returnArray;
+            return output.ToArray();
         }
 
         public static string ToString(byte[] input)

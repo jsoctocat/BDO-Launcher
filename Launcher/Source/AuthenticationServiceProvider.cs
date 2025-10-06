@@ -119,10 +119,23 @@ public class AuthenticationServiceProvider
                     return errorMsg;
             }
 
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            
             // Check for password change notification
             errorMsg = await AdditionalErrorsCheck(page, "password change");
             if (!string.IsNullOrEmpty(errorMsg))
-                return errorMsg;
+            {
+                if (errorMsg.Contains("Change Password"))
+                {
+                    var msgBox =  MsgBoxManager.GetMessageBox("Password Too Old Error",
+                        $"Your password is too old, please login using the official launcher to change your password\n\nThis error is from the game server, it will come up every 3 months",
+                        true, false, false,
+                        async void () => { 
+                            await page.ClickAsync("#btnPasswordChangeLater"); });
+                    
+                    await msgBox.ShowAsync();
+                }
+            }
             
             // Wait for Start Game btn to load
             await page.WaitForSelectorAsync("a[id=btnGamePlay]");
@@ -170,6 +183,7 @@ public class AuthenticationServiceProvider
         // Check if Captcha is requested
         if (step == "loginScript")
         {
+            // The following script checks for captcha ('.layer_launcher.inner_layer.active[data-type="alert"]')
             var checkForCaptchaError = @"
                 () => {
                     var query = document.querySelector('.layer_launcher.inner_layer.active[data-type=""alert""]');
@@ -178,7 +192,7 @@ public class AuthenticationServiceProvider
                         result = query.innerText;
                     return result;
                 }";
-        
+
             var captchaDetected = await page.EvaluateAsync<string>(checkForCaptchaError);
 
             if (!string.IsNullOrEmpty(captchaDetected))
@@ -219,17 +233,18 @@ public class AuthenticationServiceProvider
             return $"Step: {step} returned result -> The JSON is not an object.";
         }
     }
+    
     private async Task<string> AdditionalErrorsCheck(IPage page, string step)
     {
         // The following script checks for maintenance (.box_error) and
         // password change notification (.container.error.closetime)
         var additionalErrorsCheckScript = @"
                 (function(){
-                    var query = document.querySelector('.box_error');
+                    var query1 = document.querySelector('.box_error');
                     var query2 = document.querySelector('.container.error.closetime');
                     var result = null;
-                    if(query != null)
-                        result = query.innerText;
+                    if(query1 != null)
+                        result = query1.innerText;
                     else if(query2 != null)
                         result = query2.innerText;
                     return result;

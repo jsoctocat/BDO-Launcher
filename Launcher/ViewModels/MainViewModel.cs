@@ -358,30 +358,14 @@ public partial class MainViewModel : ViewModelBase
         
         if (!playToken.StartsWith("0x"))
         {
-            if (playToken.Contains("Change Password"))
-            {
-                var msgBox =  MsgBoxManager.GetMessageBox("Password Too Old Error",
-                    $"Your password is too old, please login using the official launcher to change your password\n\nThis error is from the game server, it will come up every 3 months",
-                    true, false, false,
-                    () =>
-                    {
-                        MainWindow.Instance.Close();
-                        Environment.Exit(0);
-                    });
+            //might need fix, originally return only after ok button is clicked
+            var msgBox =  MsgBoxManager.GetMessageBox("Authentication Error",
+                $"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
+                true);
                     
-                await msgBox.ShowAsync();
-            }
-            else
-            {
-                //might need fix, originally return only after ok button is clicked
-                var msgBox =  MsgBoxManager.GetMessageBox("Authentication Error",
-                    $"{playToken}\n\nPlease report the error if the error isn't your username/password/otp",
-                    true);
-                    
-                await msgBox.ShowAsync();
+            await msgBox.ShowAsync();
 
-                return false;
-            }
+            return false;
         }
 
         string affinityBitmask = "";
