@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,7 @@ public partial class MainViewModel : ViewModelBase
     private IBrowserContext _browser;
     private Configuration _configuration;
     private Window _otpWindow;
-    private const string _version = "2.0.3";
+    private const string _version = "2.0.7";
 
     public MainViewModel()
     {
@@ -99,7 +100,7 @@ public partial class MainViewModel : ViewModelBase
             UserAgent = "BLACKDESERT",
         };
         
-        var exitCode = Microsoft.Playwright.Program.Main(new[] {"install", "firefox"});
+        var exitCode = Microsoft.Playwright.Program.Main(["install", "firefox"]);
         if (exitCode != 0)
         {
             var msgBox = MsgBoxManager.GetMessageBox("Error", $"Playwright exited with code {exitCode}", true, 

@@ -108,11 +108,12 @@ public class AuthenticationServiceProvider
                     document.querySelector('#otpInput5').value = '{otpString[4]}';
                     document.querySelector('#otpInput6').value = '{otpString[5]}';
                 }}");
+    
+                var otpButton = await page.WaitForSelectorAsync(".btn.btn_big.btn_blue.btnCheckOtp");
+
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
                 
-                // Check for OTP Confirm button disable state :not([disabled])
-                await page.WaitForSelectorAsync(".btn.btn_big.btn_blue.btnCheckOtp:not([disabled])");
-                
-                await page.ClickAsync(".btn.btn_big.btn_blue.btnCheckOtp:not([disabled])");
+                await otpButton.EvaluateAsync("button => button.click()");
 
                 errorMsg = await CheckErrorMsg(page, "otpScript");
                 if (!string.IsNullOrEmpty(errorMsg))
@@ -177,8 +178,8 @@ public class AuthenticationServiceProvider
     private async Task<string> CheckErrorMsg(IPage page, string step)
     {
         // This needs to be before login btn is clicked, it will get the response of login process
-        var errorCatcher = page.WaitForResponseAsync(r => r.Request.Url.Contains("LoginProcess") ||
-                                                           r.Request.Url.Contains("LoginOtpAuth") && r.Request.Method == "POST");
+        var errorCatcher = page.WaitForResponseAsync(r => (r.Request.Url.Contains("LoginProcess") ||
+                                                           r.Request.Url.Contains("LoginOtpAuth")) && r.Request.Method == "POST");
         
         // Check if Captcha is requested
         if (step == "loginScript")

@@ -8,7 +8,7 @@ namespace Launcher;
 
 public partial class App : Application
 {
-    private const string Version = "2.0.6";
+    public const string Version = "2.0.7";
     private const string Title = "Custom Black Desert Launcher (" + Version + ")";
     
     public override void Initialize()
